@@ -6,12 +6,12 @@
 #include <mutex>
 #include <condition_variable>
 using namespace std;
-template <typename T, typename C = list<T>>
-class safe_queue:
+template <typename T, typename C = list<T> >
+class safe_queue
 {
 private:
     queue<T, C> q;
-    mutex m;
+    mutable mutex m;
     condition_variable cv;
 
 public:
@@ -61,8 +61,7 @@ public:
     shared_ptr<T> pop()
     {
         unique_lock<mutex> l(m);
-        cv.wait(m, []()
-                { return q.size() > 0 });
+        cv.wait(l, [this]{ return this->q.size() > 0; });
         shared_ptr<T> ptr=make_shared<T>(q.front());
         q.pop();
         return ptr;
