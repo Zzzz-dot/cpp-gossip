@@ -1,6 +1,7 @@
 #include "net/wrapped.h"
 #include <string.h>
 #include <thread>
+#include <arpa/inet.h>
 
 int main()
 {
@@ -32,6 +33,10 @@ int main()
         for (;;)
         {
             client_fd = Accept(server_fd_tcp, (struct sockaddr *)&remote_addr, &sin_size);
+            char addr[INET6_ADDRSTRLEN];
+            in_port_t port=ntohs(remote_addr.sin_port);
+            inet_ntop(AF_INET,&remote_addr.sin_addr,addr,sizeof(addr));
+            printf("Accept TCP Link from %s:%hhu\n",addr,port);
             char buf[1024];
             int n;
             while ((n=Read(client_fd,buf,1024))>0){

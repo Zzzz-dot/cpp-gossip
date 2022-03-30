@@ -3,6 +3,7 @@
 
 #include <sys/socket.h>
 #include <sys/errno.h>
+#include <sys/epoll.h>
 #include <netinet/in.h>
 
 #include <unistd.h>
@@ -24,6 +25,13 @@ void Bind(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len){
 
 void Listen(int fd, int n){
     int e=listen(fd,n);
+    if(e<0){
+        errno=e;
+    }
+}
+
+void Connect(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len){
+    int e=connect(fd,addr,len);
     if(e<0){
         errno=e;
     }
@@ -53,13 +61,6 @@ ssize_t Read(int fd, void *buf, size_t n){
     return num;
 }
 
-void Connect(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len){
-    int e=connect(fd,addr,len);
-    if(e<0){
-        errno=e;
-    }
-}
-
 void Close(int fd){
     int e=close(fd);
     if(e<0){
@@ -77,6 +78,29 @@ ssize_t Sendto(int fd, const void *buf, size_t n, int flags, __CONST_SOCKADDR_AR
 
 ssize_t Recvfrom(int fd, void *__restrict buf, size_t n, int flags, __SOCKADDR_ARG addr, socklen_t *__restrict addr_len){
     ssize_t num=recvfrom(fd,buf,n,flags,addr,addr_len);
+    if(num<0){
+        errno=num;
+    }
+    return num;
+}
+
+int Epoll_create(int size){
+    int n=epoll_create(size);
+    if(n<0){
+        errno=n;
+    }
+    return n;
+}
+
+void Epoll_ctl(int epfd, int op, int fd, struct epoll_event *event){
+    int e=epoll_ctl(epfd,op,fd,event);
+    if(e<0){
+        errno=e;
+    }
+}
+
+int Epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout){
+    int num=epoll_wait(epfd,events,maxevents,timeout);
     if(num<0){
         errno=num;
     }
