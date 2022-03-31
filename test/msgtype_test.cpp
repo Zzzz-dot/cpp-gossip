@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../memberlist/msgtype.h"
+#include "../memberlist/type"
 using namespace std;
 int main(){
     MsgHead mh(pingMsg);

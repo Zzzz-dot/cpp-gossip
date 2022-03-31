@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+message MessageData {
+	enum MessageType
+    {
+        pingMsg = 0;
+        indirectPingMsg=1;
+        ackRespMsg=2;
+        suspectMsg=3;
+        aliveMsg=4;
+        deadMsg=5;
+        pushPullMsg=6;
+        userMsg=7;
+        nackRespMsg=8;
+        errMsg=9;
+    }
+    MessageType Head=1;
+    oneof Body{
+        Ping ping=2;
+        IndirectPing indirectping=3;
+        AckResp ackresp=4;
+        NackResp nackresp=5;
+        ErrResp errresp=6;
+        Suspect suspect=7;
+        Alive alive=8;
+        Dead dead=9;
+        PushPull pushpull=10;
+        User user=11;
+    }
+}
+
+// ping request sent directly to node
+message Ping{
+
+    uint32 SeqNo=1;
+
+    // Node is sent so the target can verify they are
+    // the intended recipient. This is to protect again an agent
+    // restart with a new name.
+    string Node=2;
+
+    string SourceAddr=3;   // Source address, used for a direct reply
+    uint32 SourcePort=4;   // Source port, used for a direct reply
+    string SourceNode=5;   // Source name, used for a direct reply
+}
+
+// indirect ping sent to an indirect node
+// Randomly choose k nodes and send indirect ping, these k nodes send ping to Node@TargetAddr:TargetPort
+message IndirectPing
+{
+
+    uint32 SeqNo=1;   
+
+    // Node is sent so the target can verify they are
+    // the intended recipient. This is to protect again an agent
+    // restart with a new name.
+    string Node=2;
+    string TargetAddr=3;
+	uint32 TargetPort=4;
+
+    bool Nack=5;  // true if we'd like a nack back
+
+    string SourceAddr=6;   // Source address, used for a direct reply
+    uint32 SourcePort=7; // Source port, used for a direct reply
+    string SourceNode=8;   // Source name, used for a direct reply
+}
+
+// ack response is sent for a ping
+message AckResp{
+	uint32 SeqNo=1;   
+	//bytes Payload;
+};
+
+// nack response is sent for an indirect ping when the pinger doesn't hear from
+// the ping-ee within the configured timeout. This lets the original node know
+// that the indirect ping attempt happened but didn't succeed.
+message NackResp{
+	uint32 SeqNo=1;
+};
+
+// err response is sent to relay the error from the remote end
+message ErrResp{
+	string Error=1; 
+};
+
+
+// suspect is broadcast when we suspect a node is dead
+message Suspect{
+	uint32 Incarnation=1;
+	string Node=2;        
+	string From=3;         // Include who is suspecting
+}
+
+// alive is broadcast when we know a node is alive.
+// Overloaded for nodes joining
+message Alive{
+	uint32 Incarnation=1;
+	string Node=2;        
+	string Addr=3;
+	uint32 Port=4;
+	//bytes Meta;
+}
+
+// dead is broadcast when we confirm a node is dead
+// Overloaded for nodes leaving
+message Dead{
+	uint32 Incarnation=1;
+	string Node=2;        
+	string From=3;         // Include who is suspecting
+}
+
+// PushPullMsg
+message PushPull{
+    bool Join=1;// Is this a join request or a anti-entropy run
+    repeated PushNodeState States=2;
+}
+
+// PushNodeState is used for pushPullReq when we are
+// transferring out node states
+message PushNodeState{
+    enum NodeStateType
+    {
+        StateAlive = 0;
+        StateSuspect=1;
+        StateDead=2;
+        StateLeft=3;
+    }
+	string Name=1;        
+	string Addr=2;        
+	uint32 Port=3;       
+	uint32 Incarnation=4; 
+	NodeStateType State=5;       
+    //bytes Meta;
+}
+
+// User message
+message User{
+	string Msg=1;
+}
+
