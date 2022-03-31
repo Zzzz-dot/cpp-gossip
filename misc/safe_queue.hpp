@@ -43,7 +43,7 @@ public:
     {
         {
             lock_guard<mutex> l(m);
-            q.push(move(value));
+            q.push(forward<T>(value));
         }
         cv.notify_one();
     }
@@ -53,7 +53,7 @@ public:
     {
         {
             lock_guard<mutex> l(m);
-            q.emplce(args...);
+            q.emplace(forward<Args>(args)...);
         }
         cv.notify_one();
     }
