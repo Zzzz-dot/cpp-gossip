@@ -1,10 +1,13 @@
 #ifndef _MEMBERLIST_H
 #define _MEMBERLIST_H
+#include "../misc/timer.hpp"
+
 #include <net/config.h>
 #include <net/wrapped.h>
 #include <arpa/inet.h>
 
 #include <string.h>
+
 
 //TCP listen 最大监听的连接数
 #define LISTENNUM 256
@@ -24,20 +27,28 @@ private:
     uint32_t numNodes;    // Number of known nodes (estimate)
     uint32_t pushPullReq; // Number of push/pull requests
 
-    config config;
+    config config;  //Config of this member
 
     int tcpfd;   // FD of the TCP Socket
     int udpfd;   // FD of the UDP Socker
     int epollfd; // FD of the epoll I/O MUX
     struct epoll_event events[EPOLLSIZE];   //Struct for holding epoll_event when epoll_wait returns
 
+    timer schedule_timer[3];
+
+    void handlemsg();
+    void schedule();
+
+    void probe();
+    void pushpull();
+    void gossip();
+
     
 
 public:
     memberlist(/* args */);
     ~memberlist();
-    void handlemsg();
-    void schedule();
+
 
     //some helper functino
     #ifdef PRINT_ADDRINFO
@@ -125,6 +136,12 @@ memberlist::memberlist(/* args */)
 
 memberlist::~memberlist()
 {
+}
+
+void memberlist::schedule(){
+    if(config.ProbeInterval>0){
+        schedule_timer[0]=timer(config.ProbeInterval,probe);
+    }
 }
 
 #endif

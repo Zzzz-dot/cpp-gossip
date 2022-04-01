@@ -20,7 +20,7 @@ typedef struct config
 	// TCPTimeout is the timeout for establishing a stream connection with
 	// a remote node for a full state sync, and for stream read and write
 	// operations.
-	struct timeval TCPTimeout;
+	uint32_t TCPTimeout;
 
 	// IndirectChecks is the number of nodes that will be asked to perform
 	// an indirect probe of a node in the case a direct probe fails. Memberlist
@@ -80,7 +80,7 @@ typedef struct config
 	// Setting this interval lower (more frequent) will increase convergence
 	// speeds across larger clusters at the expense of increased bandwidth
 	// usage.
-	struct timeval PushPullInterval;
+	uint32_t PushPullInterval;
 
 
 	// ProbeInterval and ProbeTimeout are used to configure probing
@@ -93,8 +93,8 @@ typedef struct config
 	// ProbeTimeout is the timeout to wait for an ack from a probed node
 	// before assuming it is unhealthy. This should be set to 99-percentile
 	// of RTT (round-trip time) on your network.
-	struct timeval ProbeInterval;
-	struct timeval ProbeTimeout;
+	uint32_t ProbeInterval;
+	uint32_t ProbeTimeout;
 
 	// GossipInterval and GossipNodes are used to configure the gossip
 	// behavior of memberlist.
@@ -112,9 +112,9 @@ typedef struct config
 	//
 	// GossipToTheDeadTime is the interval after which a node has died that
 	// we will still try to gossip to it. This gives it a chance to refute.
-	struct timeval GossipInterval;
+	uint32_t GossipInterval;
 	uint8_t GossipNodes;
-	struct timeval GossipToTheDeadTime;
+	uint32_t GossipToTheDeadTime;
 };
 
 
