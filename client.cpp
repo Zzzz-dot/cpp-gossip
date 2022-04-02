@@ -1,6 +1,6 @@
 #include "net/wrapped.h"
-#include "memberlist/type/msgtype.pb.h"
 #include "net/net.h"
+#include "memberlist/type/msgtype.pb.h"
 #include <arpa/inet.h>
 #include <string.h>
 

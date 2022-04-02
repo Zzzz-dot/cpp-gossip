@@ -2,7 +2,8 @@
 #include <string.h>
 #include <thread>
 #include <arpa/inet.h>
-
+#include "memberlist/type/msgtype.pb.h"
+#include <iostream>
 int main()
 {
 
@@ -41,7 +42,9 @@ int main()
             int n;
             while ((n=Read(client_fd,buf,1024))>0){
                 buf[n]=0;
-                printf("%s\n",buf);
+                MessageData md;
+                md.ParseFromString(buf);
+                std::cout<<md.DebugString()<<std::endl;
             }
             Close(client_fd);
         }
@@ -59,7 +62,9 @@ int main()
             int n;
             while ((n=Recvfrom(server_fd_udp,buf,1024,0,(struct sockaddr *)&remote_addr, &sin_size))>0){
                 buf[n]=0;
-                printf("%s\n",buf);
+                MessageData md;
+                md.ParseFromString(buf);
+                std::cout<<md.DebugString()<<std::endl;
             }
         }
     };

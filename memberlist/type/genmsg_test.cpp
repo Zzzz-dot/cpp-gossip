@@ -1,6 +1,3 @@
-#include "msgtype.pb.h"
-#include "serilization.hpp"
-
 #include <iostream>
 using namespace std;
 
