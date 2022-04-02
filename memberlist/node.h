@@ -37,11 +37,21 @@ typedef struct Node
 // NodeState is used to manage our state view of another node
 typedef struct NodeState
 {
-    Node node;
+    Node Node;
     uint32_t Incarnation;                                        // Last known incarnation number
     NodeStateType State;                                         // Current state
     chrono::duration<int64_t, chrono::microseconds> StateChange; // Time last state change happened
     
+    bool DeadOrLeft(){
+        return State==StateDead||State==StateLeft;
+    }
+    
 } NodeState;
+
+
+
+typedef struct Suspicion{
+
+}Suspicion;
 
 #endif

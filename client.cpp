@@ -1,4 +1,5 @@
 #include "net/wrapped.h"
+#include "memberlist/type/msgtype.pb.h"
 #include "net/net.h"
 #include <arpa/inet.h>
 #include <string.h>
@@ -12,11 +13,21 @@ int main(int argc,char **argv){
         errno=e;
     }
 
-    const char *msg2="Hello UDP";
-    SendUdpMsg(server_addr,msg2,strlen(msg2));
+    MessageData md;
+    md.set_head(MessageData_MessageType::MessageData_MessageType_pingMsg);
+    Ping* p=md.mutable_ping();
+    p->set_seqno(1);
+    p->set_node("as");
+    p->set_sourceaddr("asa");
+    p->set_sourcenode("af");
+    p->set_sourceport(123);
+    cout<<md.DebugString()<<endl;
 
-    const char *msg1="Hello TCP";
-    SendTcpMsg(server_addr,msg1,strlen(msg1));
+    int fd=Socket(AF_INET,SOCK_DGRAM,0);
+    encodeSendUDP(fd,&server_addr,md);
+
+
+    encodeSendTCP(&server_addr,md);
 
 
     return 0;
