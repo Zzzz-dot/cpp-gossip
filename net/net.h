@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <chrono>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "../memberlist/type/msgtype.pb.h"
 #include <iostream>

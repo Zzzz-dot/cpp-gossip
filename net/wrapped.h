@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 
 #include <unistd.h>
+#include <sys/types.h>
 
 int Socket(int domain, int type, int protocol){
     int n=socket(domain,type,protocol);
@@ -105,6 +106,20 @@ int Epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
         errno=num;
     }
     return num;
+}
+
+void Pipe(int *pipedes){
+    int e=pipe(pipedes);
+    if(e<0){
+        errno=e;
+    }
+}
+
+void Pipe2(int *pipedes,int flags){
+    int e=pipe2(pipedes,flags);
+    if(e<0){
+        errno=e;
+    }
 }
 
 #endif

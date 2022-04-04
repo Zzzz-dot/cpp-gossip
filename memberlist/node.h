@@ -48,6 +48,11 @@ typedef struct NodeState
     
 } NodeState;
 
+// AckHandler contains callback function when AckResp
+typedef struct AckHandler{
+
+
+}AckHandler;
 
 
 typedef struct Suspicion{

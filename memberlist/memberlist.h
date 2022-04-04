@@ -2,10 +2,15 @@
 #define _MEMBERLIST_H
 #include <misc/timer.hpp>
 #include "node.h"
+#include "type/genmsg.hpp"
 #include <net/config.h>
 #include <net/wrapped.h>
 
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+
+
 
 #include <string.h>
 
@@ -214,51 +219,61 @@ void memberlist::probe()
 {
     size_t numCheck = 0;
 START:
-{
-    unique_lock<mutex> l(nodeMutex);
-    // Make sure we don't wrap around infinitely
-    if (numCheck >= nodes.size())
     {
+        unique_lock<mutex> l(nodeMutex);
+        // Make sure we don't wrap around infinitely
+        if (numCheck >= nodes.size())
+        {
+            l.unlock();
+            return;
+        }
+
+        // Handle the wrap around case
+	    if (probeIndex >= nodes.size()) {
+            random_shuffle(nodes.begin(),nodes.end());
+		    l.unlock();
+		    probeIndex = 0;
+		    numCheck++;
+		    goto START;
+	    }
+
+        // Determine if we should probe this node
+	    bool skip = false;
+	    NodeState node; 
+
+	    node = *nodes[probeIndex];
         l.unlock();
-        return;
+	    if (node.Node.Name == config.Name) {
+		    skip = true;
+	    } else if (node.DeadOrLeft()) {
+		    skip = true;
+	    }
+
+	    // Potentially skip
+	    probeIndex++;
+	    if (skip) {
+		    numCheck++;
+		    goto START;
+	    }
+        // Probe the specific node
+	    probenode(&node);
     }
-
-    // Handle the wrap around case
-	if (probeIndex >= nodes.size()) {
-        random_shuffle(nodes.begin(),nodes.end());
-		l.unlock();
-		probeIndex = 0;
-		numCheck++;
-		goto START;
-	}
-
-    // Determine if we should probe this node
-	bool skip = false;
-	NodeState node; 
-
-	node = *nodes[probeIndex];
-    l.unlock();
-	if (node.Node.Name == config.Name) {
-		skip = true;
-	} else if (node.DeadOrLeft()) {
-		skip = true;
-	}
-
-	// Potentially skip
-	probeIndex++;
-	if (skip) {
-		numCheck++;
-		goto START;
-	}
-
-	// Probe the specific node
-	probenode(&node);
 }
 
 // Send a ping request to the target node and wait for reply
 void memberlist::probenode(NodeState *node)
 {
+    auto ping=genPing(nextSeqNum(),node->Node.Name,config.BindAddr,config.BindPort,config.Name);
+
+    //匿名管道
+    int ackfd[2];
+    Pipe2(ackfd,O_DIRECT);
+    int nackfd[2];
+    Pipe2(nackfd,O_DIRECT);
     
+
+
+
 
 }
 
