@@ -3,6 +3,8 @@
 #include <iostream>
 #include <arpa/inet.h>
 #include <chrono>
+#include <functional>
+#include "../misc/timer.hpp"
 using namespace std;
 
 enum NodeStateType
@@ -50,10 +52,18 @@ typedef struct NodeState
 
 // AckHandler contains callback function when AckResp
 typedef struct AckHandler{
+    function<void()> ackFn;
+    function<void()> nackFn;
+    timer t;
 
-
+    AckHandler(const function<void()> &ackfn_,const function<void()> &nackfn_,const timer &t_):ackFn(ackfn_),nackFn(nackfn_),t(t_){};
 }AckHandler;
 
+typedef struct ackMessage{
+    bool Complete;
+    int64_t Timestamp;
+    ackMessage(uint32_t complete,int64_t timestamp):Complete(complete),Timestamp(timestamp){};
+}ackMessage;
 
 typedef struct Suspicion{
 

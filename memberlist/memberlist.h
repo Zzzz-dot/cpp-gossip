@@ -65,6 +65,11 @@ private:
     size_t probeIndex;
     void probe();
     void probenode(NodeState *node);
+    void setprobepipes(uint32_t seqno,int ackpipe,int nackpipe,uint32_t probeinterval);
+
+    mutex AckLock;
+    map<uint32_t,AckHandler> AckHandlers;
+
     void pushpull();
     void gossip();
 
@@ -269,13 +274,41 @@ void memberlist::probenode(NodeState *node)
     int ackfd[2];
     Pipe2(ackfd,O_DIRECT);
     int nackfd[2];
-    Pipe2(nackfd,O_DIRECT);
+    Pipe2(nackfd);
+    auto t=;
     
 
 
 
 
 }
+
+// setprobepipes is used to attach the ackpipe to receive a message when an ack
+// with a given sequence number is received.
+void memberlist::setprobepipes(uint32_t seqno,int ackpipe,int nackpipe,uint32_t probeinterval){
+    auto ackFn=[ackpipe](int64_t timestamp){
+        ackMessage ackmsg(true,timestamp);
+        Write(ackpipe,(void *)&ackmsg,sizeof(ackMessage));
+    };
+
+    auto nackFn=[nackpipe](){
+        Write(nackpipe,nullptr,0);
+    };
+
+    auto f=[this,seqno,ackpipe]{
+        {
+            lock_guard<mutex> l(this->AckLock);
+            this->AckHandlers.erase(seqno);
+        }
+        int64_t now=chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+        ackMessage ackmsg(false,now);
+        Write(ackpipe,(void *)&ackmsg,sizeof(ackMessage));
+    };
+
+    timer t=timer(probeinterval,f,this);
+
+    lock_guard<mutex> l(AckLock);
+    AckHandlers.emplace(seqno,AckHandler(ackFn,nackFn,t));
 
 
 

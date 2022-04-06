@@ -25,6 +25,7 @@ class timer
 {
 public:
     timer(uint32_t timeinterval_, function<void()> task_, memberlist *memb_, bool scalable_ = false) : running(false), timeinterval(timeinterval_), task(task_), scalable(scalable_), memb(memb_){};
+    timer(const timer &t):running(false), timeinterval(t.timeinterval), task(t.task), scalable(t.scalable), memb(t.memb){};
     ~timer()
     {
         Stop();

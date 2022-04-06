@@ -137,4 +137,3 @@ message PushNodeState{
 message User{
 	string Msg=1;
 }
-
