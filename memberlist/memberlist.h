@@ -138,7 +138,8 @@ void memberlist::handlemsg()
 #endif
             }
         }
-    }
+    };
+    return;
 }
 
 memberlist::memberlist(/* args */)
@@ -171,11 +172,14 @@ memberlist::memberlist(/* args */)
     struct epoll_event ev2;
     ev2.events = EPOLLIN;
     ev2.data.fd = udpfd;
-    Epoll_ctl(epollfd, EPOLL_CTL_ADD, tcpfd, &ev2);
+    Epoll_ctl(epollfd, EPOLL_CTL_ADD, udpfd, &ev2);
+
+    schedule();
 }
 
 memberlist::~memberlist()
 {
+
 }
 
 // Schedule is used to ensure the timer is performed periodically. This
@@ -312,9 +316,11 @@ void memberlist::probenode(NodeState &node)
     if(FD_ISSET(ackfd[0],&rset)){
         ackMessage ackmsg;
         Read(ackfd[0],(void *)&ackmsg,sizeof(ackMessage));
-        if(ackmsg.Complete=true){
+        if(ackmsg.Complete==true){
             return;
-        }else{
+        }
+        //Some corner case when akcmsg.Complete==false
+        else{
             Write(ackfd[1],(void *)&ackmsg,sizeof(ackMessage));
         }
     }
@@ -325,26 +331,34 @@ void memberlist::probenode(NodeState &node)
         #endif
     }
 
+    //IndirectProbe If True Ack is not received after ProbeTimeout
+    vector<NodeState> kNodes;
     {
         lock_guard<mutex> l(nodeMutex);
-        auto kNodes=kRandomNodes(config.IndirectChecks,[this](NodeState *n)->bool{
+        kNodes=kRandomNodes(config.IndirectChecks,[this](NodeState *n)->bool{
             return n->Node.Name==this->config.Name||n->State!=StateAlive;
         });
     }
 
-    auto indirectcheck
+    auto indirectping=genIndirectPing(seqno,node.Node.Name,node.Node.Addr,node.Node.Port,true,config.BindAddr,config.BindPort,config.Name);
+    for(size_t i=0;i<kNodes.size();i++){
+        struct sockaddr_in addr=kNodes[i].Node.FullAddr();
+        encodeSendUDP(udpfd,&addr,indirectping);
+    }
 
+    //TCP ping
 
-    //Wait for response
-    //Select
-    //1. 收到值为True的Ack
-    //2. 收到值为False的Ack（说是一些corner case，但是什么情况下会发生）
-    //3. 到期 ProbeTimeout
+    //Wait for IndirectPing
+    ackMessage ackmsg;
+    Read(ackfd[0],(void *)&ackMessage,sizeof(ackMessage));
+    if(ackmsg.Complete==true){
+        return;
+    }
 
-    //IndirectProbe If True Ack is not received after ProbeTimeout
-    
-
-    
+    //This node may fail, gossip suspect
+    logger<<"[INFO] memberlist: Suspect "<<node.Name<<" has failed, no acks received!"<<endl;
+    auto suspect=genSuspect(node.Incarnation,node.Node.Name,config.Name);
+    //suspectnode(node);
 }
 
 // setprobepipes is used to attach the ackpipe to receive a message when an ack
