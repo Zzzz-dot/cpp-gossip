@@ -52,16 +52,16 @@ typedef struct NodeState
 
 // AckHandler contains callback function when AckResp
 typedef struct AckHandler{
-    function<void()> ackFn;
+    function<void(int64_t)> ackFn;
     function<void()> nackFn;
     timer t;
-
-    AckHandler(const function<void()> &ackfn_,const function<void()> &nackfn_,const timer &t_):ackFn(ackfn_),nackFn(nackfn_),t(t_){};
+    AckHandler(const function<void(int64_t)> &ackfn_,const function<void()> &nackfn_,const timer &t_):ackFn(ackfn_),nackFn(nackfn_),t(t_){};
 }AckHandler;
 
 typedef struct ackMessage{
     bool Complete;
     int64_t Timestamp;
+    ackMessage()=default;
     ackMessage(uint32_t complete,int64_t timestamp):Complete(complete),Timestamp(timestamp){};
 }ackMessage;
 

@@ -3,6 +3,7 @@
 #include <misc/timer.hpp>
 #include "node.h"
 #include "type/genmsg.hpp"
+#include "../net/net.h"
 #include <net/config.h>
 #include <net/wrapped.h>
 
@@ -35,6 +36,8 @@ class memberlist
     friend class timer;
 
 private:
+    ostream logger;
+
     atomic<uint32_t> sequenceNum;      // Local sequence number
     uint32_t nextSeqNum(){ return sequenceNum.fetch_add(1);};
     uint32_t incarnation;      // Local incarnation number
@@ -52,6 +55,7 @@ private:
     vector<NodeState *> nodes;           // Known nodes
     map<string, NodeState *> nodeMap;    // Maps Node.Name -> NodeState. It may be deleted in a later sequel
     map<string, NodeState *> nodeTimers; // Maps Node.Name -> suspicion timer
+    vector<NodeState> kRandomNodes(uint8_t k,function<bool(NodeState *n)> exclude);
 
     void handlemsg();
 
@@ -64,7 +68,7 @@ private:
 
     size_t probeIndex;
     void probe();
-    void probenode(NodeState *node);
+    void probenode(NodeState &node);
     void setprobepipes(uint32_t seqno,int ackpipe,int nackpipe,uint32_t probeinterval);
 
     mutex AckLock;
@@ -261,57 +265,140 @@ START:
 		    goto START;
 	    }
         // Probe the specific node
-	    probenode(&node);
+	    probenode(node);
     }
 }
 
 // Send a ping request to the target node and wait for reply
-void memberlist::probenode(NodeState *node)
+void memberlist::probenode(NodeState &node)
 {
-    auto ping=genPing(nextSeqNum(),node->Node.Name,config.BindAddr,config.BindPort,config.Name);
+    uint32_t seqno=nextSeqNum();
+    auto ping=genPing(seqno,node.Node.Name,config.BindAddr,config.BindPort,config.Name);
 
     //匿名管道
+    //Empty Msg can be sent to nackfd, but not ackfd
     int ackfd[2];
     Pipe2(ackfd,O_DIRECT);
     int nackfd[2];
-    Pipe2(nackfd);
-    auto t=;
+    Pipe(nackfd);
+
+    //Set Probe Pipes
+    setprobepipes(seqno,ackfd[1],nackfd[1],config.ProbeInterval);
+
+    struct sockaddr_in addr=node.Node.FullAddr();
+
+    int64_t sendtime=chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
+
+    int64_t deadline=sendtime+config.ProbeInterval;
+
+    if (node.State==StateAlive){
+        encodeSendUDP(udpfd,&addr,ping);
+    }
+    //Else, this is a suspected node
+    else{
+        //This two messages con be composed into one compound message, but currently our implementation doesn't support compound message yet 
+        encodeSendUDP(udpfd,&addr,ping);
+        auto suspect=genSuspect(node.Incarnation,node.Node.Name,config.Name);
+        encodeSendUDP(udpfd,&addr,suspect);
+    }
+
+    fd_set rset;
+    FD_ZERO(&rset);
+    FD_SET(ackfd[0],&rset);
+    struct timeval probetimeout;
+    probetimeout.tv_usec=config.ProbeTimeout;
+
+    Select(ackfd[0]+1,&rset,nullptr,nullptr,&probetimeout);
+    if(FD_ISSET(ackfd[0],&rset)){
+        ackMessage ackmsg;
+        Read(ackfd[0],(void *)&ackmsg,sizeof(ackMessage));
+        if(ackmsg.Complete=true){
+            return;
+        }else{
+            Write(ackfd[1],(void *)&ackmsg,sizeof(ackMessage));
+        }
+    }
+    //Probe Timeout
+    else{
+        #ifdef DEBUG
+        logger<<"[DEBUG] memberlist: Failed UDP ping: "<<node.Node.Name<<" (timeout reached)"<<endl;
+        #endif
+    }
+
+    {
+        lock_guard<mutex> l(nodeMutex);
+        auto kNodes=kRandomNodes(config.IndirectChecks,[this](NodeState *n)->bool{
+            return n->Node.Name==this->config.Name||n->State!=StateAlive;
+        });
+    }
+
+    auto indirectcheck
+
+
+    //Wait for response
+    //Select
+    //1. 收到值为True的Ack
+    //2. 收到值为False的Ack（说是一些corner case，但是什么情况下会发生）
+    //3. 到期 ProbeTimeout
+
+    //IndirectProbe If True Ack is not received after ProbeTimeout
     
 
-
-
-
+    
 }
 
 // setprobepipes is used to attach the ackpipe to receive a message when an ack
 // with a given sequence number is received.
 void memberlist::setprobepipes(uint32_t seqno,int ackpipe,int nackpipe,uint32_t probeinterval){
+    //onRceive Ack Resp
     auto ackFn=[ackpipe](int64_t timestamp){
         ackMessage ackmsg(true,timestamp);
         Write(ackpipe,(void *)&ackmsg,sizeof(ackMessage));
     };
 
+    //onReceive Nack Resp
     auto nackFn=[nackpipe](){
         Write(nackpipe,nullptr,0);
     };
 
+    //Callback functino after prointerval, this timer is invoked only when the Ack expired
     auto f=[this,seqno,ackpipe]{
         {
             lock_guard<mutex> l(this->AckLock);
             this->AckHandlers.erase(seqno);
         }
-        int64_t now=chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch()).count();
+        int64_t now=chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
         ackMessage ackmsg(false,now);
         Write(ackpipe,(void *)&ackmsg,sizeof(ackMessage));
     };
 
-    timer t=timer(probeinterval,f,this);
-
-    lock_guard<mutex> l(AckLock);
-    AckHandlers.emplace(seqno,AckHandler(ackFn,nackFn,t));
-
-
-
+    //Add AckHandlers
+    {
+        timer t=timer(probeinterval,f,this);
+        lock_guard<mutex> l(AckLock);
+        AckHandlers.emplace(seqno,AckHandler(ackFn,nackFn,t));
+    }
+    //Start timer
+    AckHandlers[seqno].t.Run();
 }
 
+
+vector<NodeState> memberlist::kRandomNodes(uint8_t k,function<bool(NodeState *n)> exclude){
+    size_t n=nodes.size();
+    vector<NodeState> kNodes;
+    for (int i=0;i<3*n&&kNodes.size()<k;i++){
+        int idx=rand()/RAND_MAX*n;
+        if(exclude!=NULL&&exclude(nodes[idx])){
+            continue;
+        }
+
+        for(int j=0;j<kNodes.size();j++){
+            if(nodes[idx]->Node.Name==kNodes[j].Node.Name){
+                continue;
+            }
+        }
+        kNodes.push_back(*nodes[idx]);
+    }
+    return kNodes;
+}
 #endif

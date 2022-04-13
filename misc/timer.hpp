@@ -49,7 +49,7 @@ public:
                     auto wait_time = this->timeinterval;
                     if(this->scalable)
                         wait_time=pushPullScale(wait_time,this->estNumNodes());
-                    this->cv.wait_for(l, chrono::milliseconds(wait_time), [this]
+                    this->cv.wait_for(l, chrono::microseconds(wait_time), [this]
                                       { return !this->running; });
                 }
                 if (!this->running)
@@ -75,7 +75,7 @@ public:
 private:
     bool running;
     bool scalable;
-    uint32_t timeinterval; // milliseconds
+    uint32_t timeinterval; // microseconds
     function<void()> task;
     mutex m;
     condition_variable cv;
