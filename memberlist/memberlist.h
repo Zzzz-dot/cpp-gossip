@@ -57,7 +57,14 @@ private:
     map<string, NodeState *> nodeTimers; // Maps Node.Name -> suspicion timer
     vector<NodeState> kRandomNodes(uint8_t k,function<bool(NodeState *n)> exclude);
 
-    void handlemsg();
+    //when an epoll event happens
+    void handleevent();
+    //onReceive a new connection
+    void handleconn(int connfd);
+    //onReceive a tcp message
+    void handletcp();
+    //onReceive a udp message
+    void handleudp();
 
     //Begin schedule
     //do probe, state synchronization and gossip periodically
@@ -98,15 +105,33 @@ public:
 #endif
 };
 
-void memberlist::handlemsg()
-{
-    auto handletcp = [](int coonfd)
-    {
-        Epoll_ctl(epollfd, ) for (;;)
-        {
-        }
-    };
 
+void memberlist::handleconn(int sockfd){
+    struct sockaddr_in remote_addr;
+    bzero(&remote_addr, sizeof(sockaddr_in));
+    socklen_t socklen = sizeof(sockaddr_in);
+
+    int connfd = Accept(socketfd, (struct sockaddr *)&remote_addr, &socklen);
+
+    struct epoll_event ev;
+    //EPOLLET
+    ev.events = EPOLLIN;
+    ev.data.fd = connfd;
+    Epoll_ctl(epollfd, EPOLL_CTL_ADD, connfd, &ev);
+}
+
+void memberlist::handletcp(int sockfd){
+
+}
+
+void memberlist::handleudp(int sockfd){
+    
+}
+
+
+
+void memberlist::handleevent()
+{
     auto handleevent = [this]()
     {
         for (;;)
@@ -115,23 +140,22 @@ void memberlist::handlemsg()
             for (int i = 0; i < events_num; i++)
             {
                 int socketfd = this->events[i].data.fd;
-                struct sockaddr_in remote_addr;
-                bzero(&remote_addr, sizeof(sockaddr_in));
-                socklen_t socklen = sizeof(sockaddr_in);
+
 
                 // Receive a new connection from TCP
                 if (socketfd == this->tcpfd)
                 {
-                    int connfd = Accept(socketfd, (struct sockaddr *)&remote_addr, &socklen);
-                    handlemsg(connfd);
+                    handleconn(socketfd);
                 }
                 // Receive a new message from UDP
                 else if (socketfd == this->udpfd)
                 {
+                    handletcp(socketfd);
                 }
                 // Receive a new message from TCP
                 else
                 {
+                    handleudp(socketfd);
                 }
 #ifdef PRINT_ADDRINFO
                 printaddr(remote_addr);
