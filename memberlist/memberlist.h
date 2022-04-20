@@ -62,9 +62,11 @@ private:
     //onReceive a new connection
     void handleconn(int connfd);
     //onReceive a tcp message
-    void handletcp();
+    void handletcp(int sockfd);
     //onReceive a udp message
-    void handleudp();
+    void handleudp(int sockfd);
+
+    void handlePing
 
     //Begin schedule
     //do probe, state synchronization and gossip periodically
@@ -111,13 +113,17 @@ void memberlist::handleconn(int sockfd){
     bzero(&remote_addr, sizeof(sockaddr_in));
     socklen_t socklen = sizeof(sockaddr_in);
 
-    int connfd = Accept(socketfd, (struct sockaddr *)&remote_addr, &socklen);
+    int connfd = Accept(sockfd, (struct sockaddr *)&remote_addr, &socklen);
 
     struct epoll_event ev;
     //EPOLLET
     ev.events = EPOLLIN;
     ev.data.fd = connfd;
     Epoll_ctl(epollfd, EPOLL_CTL_ADD, connfd, &ev);
+
+#ifdef PRINT_ADDRINFO
+    printaddr(remote_addr);
+#endif
 }
 
 void memberlist::handletcp(int sockfd){
@@ -125,7 +131,37 @@ void memberlist::handletcp(int sockfd){
 }
 
 void memberlist::handleudp(int sockfd){
-    
+    struct sockaddr_in remote_addr;
+    bzero(&remote_addr, sizeof(sockaddr_in));
+    socklen_t socklen = sizeof(sockaddr_in);  
+
+    auto md=onReceiveUDP(sockfd,remote_addr,socklen);
+    switch (md.head())
+    {
+    case MessageData::MessageType::MessageData_MessageType_pingMsg:
+        /* code */
+        break;
+    default:
+        break;
+    }
+}
+
+void memberlist::handlePing(MessageData &ping,sockaddr_in &remote_addr){
+    string addr;
+    if (ping.ping().sourceaddr()!=""){
+        addr=ping.ping().sourceaddr();
+    }else{
+        char addr_[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET,&remote_addr.sin_addr,addr_,sizeof(addr_));
+        addr=string(addr_);
+    }
+    if (ping.ping().node()!=""&&ping.ping().node()!=config.Name){
+        logger<<"[WARN] memberlist: Got ping for unexpected node \'"<<ping.ping().node()<<"\' from "<<addr<<endl;
+    }
+
+    auto ackmsg=genAckResp(ping.ping().seqno());
+
+    encodeSendUDP(udpfd,&remote_addr,ackmsg);
 }
 
 
@@ -140,7 +176,6 @@ void memberlist::handleevent()
             for (int i = 0; i < events_num; i++)
             {
                 int socketfd = this->events[i].data.fd;
-
 
                 // Receive a new connection from TCP
                 if (socketfd == this->tcpfd)
@@ -157,9 +192,6 @@ void memberlist::handleevent()
                 {
                     handleudp(socketfd);
                 }
-#ifdef PRINT_ADDRINFO
-                printaddr(remote_addr);
-#endif
             }
         }
     };

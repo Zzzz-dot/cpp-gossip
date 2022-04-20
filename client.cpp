@@ -25,6 +25,7 @@ int main(int argc,char **argv){
 
     int fd=Socket(AF_INET,SOCK_DGRAM,0);
     encodeSendUDP(fd,&server_addr,md);
+    encodeSendUDP(fd,&server_addr,md);
 
 
     encodeSendTCP(&server_addr,md);

@@ -70,6 +70,7 @@ int main()
     };
 
     std::thread t1(tcp_server);
+    sleep(5);
     std::thread t2(udp_server);
     t1.join();
     t2.join();

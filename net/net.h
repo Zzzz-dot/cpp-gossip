@@ -41,26 +41,25 @@ using namespace std;
 
     } */
 
-void onReceive(const string &s)
+MessageData onReceive(const string &s)
 {
     MessageData md;
-    if (md.ParseFromString(s) == false)
-    {
-        cout << "ParseFromString Error!" << endl;
-        return;
-    }
-    //SWITCH(md.head());
+
+    return md;
 }
 
-void onReceive(int fd)
+MessageData onReceiveUDP(int fd,sockaddr_in &remote_addr,socklen_t &sin_size)
 {
     MessageData md;
-    if (md.ParseFromFileDescriptor(fd) == false)
+    char buf[1024];
+    int n=Recvfrom(fd,buf,1024,0,(struct sockaddr *)&remote_addr, &sin_size);
+    buf[n]=0;
+    if (md.ParseFromString(buf) == false)
     {
-        cout << "ParseFromFileDescriptor Error!" << endl;
-        return;
+        cout << "ParseFromString Error!" << endl;
     }
-    //SWITCH(md.head());
+    std::cout<<md.DebugString()<<std::endl;
+    return md;
 }
 
 void beforeSend(const MessageData &md, string *s)
@@ -82,10 +81,10 @@ string beforeSend(const MessageData &md)
     return s;
 }
 
-void sendTCP(const struct sockaddr_in *server_addr, const void *msg, size_t n)
+void sendTCP(const struct sockaddr_in *remote_addr, const void *msg, size_t n)
 {
     int fd = Socket(AF_INET, SOCK_STREAM, 0);
-    Connect(fd, (struct sockaddr *)server_addr, sizeof(sockaddr));
+    Connect(fd, (struct sockaddr *)remote_addr, sizeof(sockaddr));
     struct sockaddr_in local_addr;
     socklen_t len;
     getsockname(fd, (struct sockaddr *)&local_addr, &len);
@@ -98,21 +97,21 @@ void sendTCP(const struct sockaddr_in *server_addr, const void *msg, size_t n)
     Write(fd, msg, n);
 }
 
-void sendUDP(int fd, const struct sockaddr_in *server_addr, const void *msg, size_t n)
+void sendUDP(int fd, const struct sockaddr_in *remote_addr, const void *msg, size_t n)
 {
-    Sendto(fd, msg, n, 0, (struct sockaddr *)server_addr, sizeof(sockaddr));
+    Sendto(fd, msg, n, 0, (struct sockaddr *)remote_addr, sizeof(sockaddr));
 }
 
-void encodeSendTCP(const struct sockaddr_in *server_addr, const MessageData &md)
+void encodeSendTCP(const struct sockaddr_in *remote_addr, const MessageData &md)
 {
     string encodeMsg = beforeSend(md);
-    sendTCP(server_addr, encodeMsg.c_str(), encodeMsg.size());
+    sendTCP(remote_addr, encodeMsg.c_str(), encodeMsg.size());
 };
 
-void encodeSendUDP(int fd, const struct sockaddr_in *server_addr, const MessageData &md)
+void encodeSendUDP(int fd, const struct sockaddr_in *remote_addr, const MessageData &md)
 {
     string encodeMsg = beforeSend(md);
-    sendUDP(fd, server_addr, encodeMsg.c_str(), encodeMsg.size());
+    sendUDP(fd, remote_addr, encodeMsg.c_str(), encodeMsg.size());
 };
 
 #endif
