@@ -1,3 +1,5 @@
 .vscode
 build
-temp
+temp/client
+temp/server
+temp/pipe
