@@ -1,15 +1,4 @@
-#ifndef _NET_H
-#define _NET_H
-#include "wrapped.h"
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <chrono>
-#include <stdlib.h>
-#include <unistd.h>
-
-#include "../memberlist/type/msgtype.pb.h"
-#include <iostream>
-using namespace std;
+#include <mynet/net.h>
 
 /* #define SWITCH(cond)                                                       \
     switch (md.head())                                                     \

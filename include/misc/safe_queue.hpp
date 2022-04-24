@@ -1,11 +1,14 @@
 // This file encapsulates the std::queue, providing a thread-safe way to access the queue
 #ifndef _QUEUE_H
 #define _QUEUE_H
+
 #include <list>
 #include <queue>
 #include <mutex>
 #include <condition_variable>
+
 using namespace std;
+
 template <typename T, typename C = list<T> >
 class safe_queue
 {

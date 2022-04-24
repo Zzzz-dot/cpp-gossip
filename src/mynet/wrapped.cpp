@@ -1,13 +1,4 @@
-#ifndef _WRAPPED_H
-#define _WRAPPED_H
-
-#include <sys/socket.h>
-#include <sys/errno.h>
-#include <sys/epoll.h>
-#include <netinet/in.h>
-
-#include <unistd.h>
-#include <sys/types.h>
+#include <mynet/wrapped.h>
 
 int Socket(int domain, int type, int protocol){
     int n=socket(domain,type,protocol);

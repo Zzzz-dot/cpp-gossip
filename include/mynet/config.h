@@ -1,12 +1,14 @@
 #ifndef _CONFIG_H
 #define _CONFIG_H
+
 #include <iostream>
+
 using namespace std;
+
 //该 gossip 协议设计涉及两种传输层数据类型，分别为 TCP 和 UDP
 //通过 UDP 发送 Probe 消息探测其他节点的状态
 //通过 UDP 发送 Gossip 消息，传播节点的更新信息
 //通过 TCP 发送 PushPull 消息，交换所有节点的信息
-
 typedef struct config
 {
     // The name of this node. This must be unique in the cluster.

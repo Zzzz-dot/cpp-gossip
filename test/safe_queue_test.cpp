@@ -1,4 +1,5 @@
-#include "../misc/safe_queue.hpp"
+#include <misc/safe_queue.hpp>
+
 #include <list>
 #include <thread>
 #include <iostream>

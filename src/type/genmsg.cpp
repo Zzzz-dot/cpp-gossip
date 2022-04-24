@@ -1,7 +1,7 @@
 // Generate the corresponding message in protobuf type
-#ifndef _GENMSG_HPP
-#define _GENMSG_HPP
-#include "msgtype.pb.h"
+#include <type/msgtype.pb.h>
+#include <type/genmsg.h>
+
 #include <iostream>
 using namespace std;
 
@@ -105,6 +105,3 @@ void addPushNodeState(MessageData &md,const string& name,const string& addr,uint
     nd->set_incarnation(incarnation);
     nd->set_state(state);
 }
-
-
-#endif

@@ -1,10 +1,12 @@
 #ifndef _NODE_H
 #define _NODE_H
+
+#include <misc/timer.hpp>
+
 #include <iostream>
 #include <arpa/inet.h>
 #include <chrono>
 #include <functional>
-#include "../misc/timer.hpp"
 using namespace std;
 
 enum NodeStateType

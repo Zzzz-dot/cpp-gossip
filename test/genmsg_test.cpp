@@ -1,5 +1,6 @@
+#include <type/genmsg.h>
+
 #include <iostream>
-#include "genmsg.hpp"
 using namespace std;
 
 int main(){

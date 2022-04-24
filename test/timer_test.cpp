@@ -1,4 +1,4 @@
-#include "../misc/timer.hpp"
+#include <misc/timer.hpp>
 
 #include <iostream>
 #include <chrono>

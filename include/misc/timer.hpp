@@ -1,14 +1,15 @@
 // Create a timer with the given function f(), and f() will be excuted periodically until exit
 #ifndef _TIMER_H
 #define _TIMER_H
+
+#include <memberlist/memberlist.h>
+
 #include <chrono>
 #include <mutex>
 #include <condition_variable>
 #include <functional>
 #include <thread>
 #include <cmath>
-
-#include "../memberlist/memberlist.h"
 
 using namespace std;
 
