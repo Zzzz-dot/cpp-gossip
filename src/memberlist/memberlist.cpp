@@ -1,100 +1,9 @@
-#ifndef _MEMBERLIST_H
-#define _MEMBERLIST_H
 #include <memberlist/memberlist.h>
 using namespace std;
 
-void memberlist::handleconn(int sockfd){
-    struct sockaddr_in remote_addr;
-    bzero(&remote_addr, sizeof(sockaddr_in));
-    socklen_t socklen = sizeof(sockaddr_in);
+void memberlist::newmemberlist(){
+    clearmemberlist();
 
-    int connfd = Accept(sockfd, (struct sockaddr *)&remote_addr, &socklen);
-
-    struct epoll_event ev;
-    //EPOLLET
-    ev.events = EPOLLIN;
-    ev.data.fd = connfd;
-    Epoll_ctl(epollfd, EPOLL_CTL_ADD, connfd, &ev);
-
-#ifdef PRINT_ADDRINFO
-    printaddr(remote_addr);
-#endif
-}
-
-void memberlist::handletcp(int sockfd){
-
-}
-
-void memberlist::handleudp(int sockfd){
-    struct sockaddr_in remote_addr;
-    bzero(&remote_addr, sizeof(sockaddr_in));
-    socklen_t socklen = sizeof(sockaddr_in);  
-
-    auto md=onReceiveUDP(sockfd,remote_addr,socklen);
-    switch (md.head())
-    {
-    case MessageData::MessageType::MessageData_MessageType_pingMsg:
-        /* code */
-        break;
-    default:
-        break;
-    }
-}
-
-void memberlist::handlePing(MessageData &ping,sockaddr_in &remote_addr){
-    string addr;
-    if (ping.ping().sourceaddr()!=""){
-        addr=ping.ping().sourceaddr();
-    }else{
-        char addr_[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET,&remote_addr.sin_addr,addr_,sizeof(addr_));
-        addr=string(addr_);
-    }
-    if (ping.ping().node()!=""&&ping.ping().node()!=config.Name){
-        logger<<"[WARN] memberlist: Got ping for unexpected node \'"<<ping.ping().node()<<"\' from "<<addr<<endl;
-    }
-
-    auto ackmsg=genAckResp(ping.ping().seqno());
-
-    encodeSendUDP(udpfd,&remote_addr,ackmsg);
-}
-
-
-
-void memberlist::handleevent()
-{
-    auto handleevent = [this]()
-    {
-        for (;;)
-        {
-            int events_num = Epoll_wait(this->epollfd, this->events, EPOLLSIZE, -1);
-            for (int i = 0; i < events_num; i++)
-            {
-                int socketfd = this->events[i].data.fd;
-
-                // Receive a new connection from TCP
-                if (socketfd == this->tcpfd)
-                {
-                    handleconn(socketfd);
-                }
-                // Receive a new message from UDP
-                else if (socketfd == this->udpfd)
-                {
-                    handletcp(socketfd);
-                }
-                // Receive a new message from TCP
-                else
-                {
-                    handleudp(socketfd);
-                }
-            }
-        }
-    };
-    return;
-}
-
-memberlist::memberlist(/* args */)
-{
     // Init local address
     struct sockaddr_in local_addr;
     bzero(&local_addr, sizeof(sockaddr_in));
@@ -124,12 +33,33 @@ memberlist::memberlist(/* args */)
     ev2.events = EPOLLIN;
     ev2.data.fd = udpfd;
     Epoll_ctl(epollfd, EPOLL_CTL_ADD, udpfd, &ev2);
+};
+
+void memberlist::clearmemberlist(){
+
+}
+
+// Join is used to take an existing Memberlist and attempt to join a cluster
+// by contacting the given host and performing a state sync. Initially,
+// the Memberlist only contains our own state, so doing this will cause
+// remote node to become aware of the existence of this node, effectively
+// joining the cluster.
+void memberlist::join(const string& cluster_addr){
+    
+}
+
+memberlist::memberlist(/* args */):scheduled(false)
+{
+    newmemberlist();
 
     schedule();
 }
 
+
+
 memberlist::~memberlist()
 {
+    clearmemberlist();
 
 }
 
@@ -301,13 +231,13 @@ void memberlist::probenode(NodeState &node)
 
     //Wait for IndirectPing
     ackMessage ackmsg;
-    Read(ackfd[0],(void *)&ackMessage,sizeof(ackMessage));
+    Read(ackfd[0],(void *)&ackmsg,sizeof(ackMessage));
     if(ackmsg.Complete==true){
         return;
     }
 
     //This node may fail, gossip suspect
-    logger<<"[INFO] memberlist: Suspect "<<node.Name<<" has failed, no acks received!"<<endl;
+    logger<<"[INFO] memberlist: Suspect "<<node.Node.Name<<" has failed, no acks received!"<<endl;
     auto suspect=genSuspect(node.Incarnation,node.Node.Name,config.Name);
     //suspectnode(node);
 }
@@ -366,4 +296,3 @@ vector<NodeState> memberlist::kRandomNodes(uint8_t k,function<bool(NodeState *n)
     }
     return kNodes;
 }
-#endif

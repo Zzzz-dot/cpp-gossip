@@ -30,24 +30,20 @@
 
     } */
 
-MessageData onReceive(const string &s)
-{
-    MessageData md;
-
-    return md;
-}
-
-MessageData onReceiveUDP(int fd,sockaddr_in &remote_addr,socklen_t &sin_size)
+MessageData onReceiveUDP(int fd, sockaddr_in &remote_addr, socklen_t &sin_size)
 {
     MessageData md;
     char buf[1024];
-    int n=Recvfrom(fd,buf,1024,0,(struct sockaddr *)&remote_addr, &sin_size);
-    buf[n]=0;
+    int n = Recvfrom(fd, buf, 1024, 0, (struct sockaddr *)&remote_addr, &sin_size);
+    buf[n] = 0;
     if (md.ParseFromString(buf) == false)
     {
         cout << "ParseFromString Error!" << endl;
     }
-    std::cout<<md.DebugString()<<std::endl;
+#ifdef DEBUG
+    cout<<"[DEBUG] Receive UDP Message:"<<endl;
+    cout<<md.DebugString()<<endl;
+#endif
     return md;
 }
 
@@ -93,12 +89,20 @@ void sendUDP(int fd, const struct sockaddr_in *remote_addr, const void *msg, siz
 
 void encodeSendTCP(const struct sockaddr_in *remote_addr, const MessageData &md)
 {
+#ifdef DEBUG
+    cout << "[DEBUG] Send TCP Message:" << endl;
+    cout << md.DebugString() << endl;
+#endif
     string encodeMsg = beforeSend(md);
     sendTCP(remote_addr, encodeMsg.c_str(), encodeMsg.size());
 };
 
 void encodeSendUDP(int fd, const struct sockaddr_in *remote_addr, const MessageData &md)
 {
+#ifdef DEBUG
+    cout << "[DEBUG] Send UDP Message:" << endl;
+    cout << md.DebugString() << endl;
+#endif
     string encodeMsg = beforeSend(md);
     sendUDP(fd, remote_addr, encodeMsg.c_str(), encodeMsg.size());
 };

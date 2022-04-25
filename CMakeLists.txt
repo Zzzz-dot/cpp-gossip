@@ -10,7 +10,7 @@ include_directories(include)
 enable_testing()
 
 # add directory ./memberlist/type to the cmake build list
-add_subdirectory(src/type)
+add_subdirectory(src)
 # add directory ./test to the cmake build list
 add_subdirectory(test)
 

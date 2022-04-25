@@ -64,7 +64,8 @@ private:
     //onReceive a udp message
     void handleudp(int sockfd);
 
-    void handlePing
+    //onReceive a udp ping message
+    void handlePing(MessageData &ping,sockaddr_in &remote_addr);
 
     //Begin schedule
     //do probe, state synchronization and gossip periodically
@@ -85,10 +86,13 @@ private:
     void gossip();
 
 public:
+    void newmemberlist();
+    void clearmemberlist();
     memberlist(/* args */) : scheduled(false){
         sequenceNum.store(0);
     };
     ~memberlist();
+    void join(const string& cluster_addr);
 
 // some helper functino
 #ifdef PRINT_ADDRINFO
