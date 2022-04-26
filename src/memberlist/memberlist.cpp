@@ -45,7 +45,7 @@ void memberlist::clearmemberlist(){
 // remote node to become aware of the existence of this node, effectively
 // joining the cluster.
 void memberlist::join(const string& cluster_addr){
-    
+    struct sockaddr_in remote_addr=resolveAddr(cluster_addr);
 }
 
 memberlist::memberlist(/* args */):scheduled(false)

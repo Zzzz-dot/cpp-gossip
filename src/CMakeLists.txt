@@ -13,8 +13,13 @@ target_link_directories(genmsg PRIVATE "/usr/local/usr")
 target_link_libraries(genmsg "protobuf")
 
 # MEMBERLIST
-add_library(memberlist memberlist/memberlist.cpp memberlist/handlemsg.cpp)
+aux_source_directory(memberlist memberlistfile)
+add_library(memberlist ${memberlistfile})
 
 add_dependencies(memberlist genmsg)
 
 target_link_libraries(memberlist genmsg)
+
+aux_source_directory(mynet mynetfile)
+
+add_library(mynet ${mynetfile})

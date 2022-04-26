@@ -107,4 +107,18 @@ void encodeSendUDP(int fd, const struct sockaddr_in *remote_addr, const MessageD
     sendUDP(fd, remote_addr, encodeMsg.c_str(), encodeMsg.size());
 };
 
+// sendAndReceiveState is used to initiate a push/pull over a stream with a
+// remote host.
+void memberlist::sendAndReceiveState(struct sockaddr_in& remote_node,bool join){
+    
+}
+
+// sendLocalState is invoked to send our local state over a stream connection.
+void memberlist::sendLocalState(struct sockaddr_in& remote_node,bool join){
+    {
+        lock_guard(nodeMutex);
+        vector<>
+    }
+}
+
 #endif

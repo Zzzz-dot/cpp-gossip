@@ -1,3 +1,3 @@
 #include <iostream>
-#include <mynet/config.h>
+#include <memberlist/config.h>
 using namespace std;

@@ -5,6 +5,10 @@
 
 using namespace std;
 
+//default port for joining to a cluster
+//assume other cluster members listen on this port by default
+#define DEFAULT_PORT 6666
+
 //该 gossip 协议设计涉及两种传输层数据类型，分别为 TCP 和 UDP
 //通过 UDP 发送 Probe 消息探测其他节点的状态
 //通过 UDP 发送 Gossip 消息，传播节点的更新信息

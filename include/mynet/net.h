@@ -4,13 +4,13 @@
 #include "wrapped.h"
 
 #include <type/msgtype.pb.h>
+#include <memberlist/memberlist.h>
 
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <chrono>
 #include <stdlib.h>
 #include <unistd.h>
-
 #include <iostream>
 
 using namespace std;

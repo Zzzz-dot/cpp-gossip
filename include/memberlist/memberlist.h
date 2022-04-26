@@ -2,11 +2,12 @@
 #define _MEMBERLIST_H
 //CURRENT DIR
 #include "node.h"
+#include "config.h"
 //MY INCLUDE DIR
 #include <misc/timer.hpp>
+#include <misc/util.hpp>
 #include <type/genmsg.h>
 #include <mynet/net.h>
-#include <mynet/config.h>
 #include <mynet/wrapped.h>
 //SYS INCLUDE PATH
 #include <arpa/inet.h>
@@ -54,6 +55,10 @@ private:
     map<string, NodeState *> nodeMap;    // Maps Node.Name -> NodeState. It may be deleted in a later sequel
     map<string, NodeState *> nodeTimers; // Maps Node.Name -> suspicion timer
     vector<NodeState> kRandomNodes(uint8_t k,function<bool(NodeState *n)> exclude);
+
+    void sendAndReceiveState(struct sockaddr_in& remote_node,bool join);
+
+    void sendLocalState(struct sockaddr_in& remote_node,bool join);
 
     //when an epoll event happens
     void handleevent();
