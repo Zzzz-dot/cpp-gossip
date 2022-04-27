@@ -1,36 +1,6 @@
 #include <mynet/net.h>
 
-/* #define SWITCH(cond)                                                       \
-    switch (md.head())                                                     \
-    {                                                                      \
-    case MessageData_MessageType::MessageData_MessageType_pingMsg:         \
-                                                                           \
-        break;                                                             \
-    case MessageData_MessageType::MessageData_MessageType_indirectPingMsg: \
-                                                                           \
-        break;                                                             \
-    case MessageData_MessageType::MessageData_MessageType_ackRespMsg:      \
-                                                                           \
-        break;                                                             \
-    case MessageData_MessageType::MessageData_MessageType_suspectMsg:      \
-                                                                           \
-    case MessageData_MessageType::MessageData_MessageType_aliveMsg:        \
-                                                                           \
-    case MessageData_MessageType::MessageData_MessageType_deadMsg:         \
-                                                                           \
-    case MessageData_MessageType::MessageData_MessageType_pushPullMsg:     \
-                                                                           \
-    case MessageData_MessageType::MessageData_MessageType_userMsg:         \
-                                                                           \
-    case MessageData_MessageType::MessageData_MessageType_nackRespMsg:     \
-                                                                           \
-    case MessageData_MessageType::MessageData_MessageType_errMsg:          \
-                                                                           \
-    default:                                                               \
-
-    } */
-
-MessageData onReceiveUDP(int fd, sockaddr_in &remote_addr, socklen_t &sin_size)
+MessageData decodeReceiveUDP(int fd, sockaddr_in &remote_addr, socklen_t &sin_size)
 {
     MessageData md;
     char buf[1024];
@@ -41,10 +11,98 @@ MessageData onReceiveUDP(int fd, sockaddr_in &remote_addr, socklen_t &sin_size)
         cout << "ParseFromString Error!" << endl;
     }
 #ifdef DEBUG
-    cout<<"[DEBUG] Receive UDP Message:"<<endl;
-    cout<<md.DebugString()<<endl;
+    cout << "[DEBUG] Receive UDP Message:" << endl;
+    cout << md.DebugString() << endl;
 #endif
     return md;
+}
+
+MessageData decodeReceiveTCP(int fd)
+{
+    MessageData md;
+    char buf[1024];
+    int n = Read(fd, buf, 1024);
+    buf[n] = 0;
+    if (md.ParseFromString(buf) == false)
+    {
+        cout << "ParseFromString Error!" << endl;
+    }
+#ifdef DEBUG
+    cout << "[DEBUG] Receive TCP Message:" << endl;
+    cout << md.DebugString() << endl;
+#endif
+    return md;
+}
+
+// Socket timeout setting mode:
+
+// 1. Call alarm, which generates SIGALARM when the specified timeout expires. This approach involves signal processing,
+//    which varies from implementation to implementation and can interfere with existing alarm calls in the process.
+
+// 2. Blocking waits for I/O in SELECT (select has a built-in time limit) instead of directly blocking on read or write calls.
+
+// 3. Use the SO_RECVTIMEO and SO_SNDTIMEO socket options
+
+int connectTimeout(int fd, const struct sockaddr *addr, socklen_t len, uint32_t timeout)
+{
+    int flags, n, error;
+
+    // Non-blocking
+    flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+    n = connect(fd, addr, len);
+    if (n < 0 && errno != EINPROGRESS)
+    {
+        return -1;
+    }
+
+    if (n == 0)
+    {
+        goto done;
+    }
+
+    fd_set rset, wset;
+    FD_ZERO(&rset);
+    FD_SET(fd, &rset);
+    wset = rset;
+
+    struct timeval connecttimeout;
+    connecttimeout.tv_usec = timeout;
+
+    n = Select(fd + 1, &rset, &wset, nullptr, &connecttimeout);
+    if (n == 0)
+    {
+        close(fd);
+        errno = ETIMEDOUT;
+        return -1;
+    }
+
+    error = 0;
+    if (FD_ISSET(fd, &rset) || FD_ISSET(fd, &wset))
+    {
+        if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, NULL) < 0)
+            return -1;
+    }
+
+done:
+    fcntl(fd, F_SETFL, flags);
+    if (error)
+    {
+        close(fd);
+        errno = error;
+        return -1;
+    }
+    return 0;
+}
+
+void ConnectTimeout(int fd, const struct sockaddr *addr, socklen_t len, uint32_t timeout)
+{
+    int e = connectTimeout(fd, addr, len, timeout);
+    if (e < 0)
+    {
+        // do something
+    }
 }
 
 void beforeSend(const MessageData &md, string *s)
@@ -66,35 +124,14 @@ string beforeSend(const MessageData &md)
     return s;
 }
 
-void sendTCP(const struct sockaddr_in *remote_addr, const void *msg, size_t n)
-{
-    int fd = Socket(AF_INET, SOCK_STREAM, 0);
-    Connect(fd, (struct sockaddr *)remote_addr, sizeof(sockaddr));
-    struct sockaddr_in local_addr;
-    socklen_t len;
-    getsockname(fd, (struct sockaddr *)&local_addr, &len);
-    char addr[INET6_ADDRSTRLEN];
-    in_port_t port = ntohs(local_addr.sin_port);
-    inet_ntop(AF_INET, &local_addr.sin_addr, addr, sizeof(addr));
-    printf("Local Address: %s\n", addr);
-    printf("Local Port: %hhu\n", port);
-    sleep(10);
-    Write(fd, msg, n);
-}
-
-void sendUDP(int fd, const struct sockaddr_in *remote_addr, const void *msg, size_t n)
-{
-    Sendto(fd, msg, n, 0, (struct sockaddr *)remote_addr, sizeof(sockaddr));
-}
-
-void encodeSendTCP(const struct sockaddr_in *remote_addr, const MessageData &md)
+void encodeSendTCP(int fd, const MessageData &md)
 {
 #ifdef DEBUG
     cout << "[DEBUG] Send TCP Message:" << endl;
     cout << md.DebugString() << endl;
 #endif
     string encodeMsg = beforeSend(md);
-    sendTCP(remote_addr, encodeMsg.c_str(), encodeMsg.size());
+    Write(fd, encodeMsg.c_str(), encodeMsg.size());
 };
 
 void encodeSendUDP(int fd, const struct sockaddr_in *remote_addr, const MessageData &md)
@@ -104,21 +141,59 @@ void encodeSendUDP(int fd, const struct sockaddr_in *remote_addr, const MessageD
     cout << md.DebugString() << endl;
 #endif
     string encodeMsg = beforeSend(md);
-    sendUDP(fd, remote_addr, encodeMsg.c_str(), encodeMsg.size());
+    Sendto(fd, encodeMsg.c_str(), encodeMsg.size(), 0, (struct sockaddr *)remote_addr, sizeof(sockaddr));
 };
 
 // sendAndReceiveState is used to initiate a push/pull over a stream with a
 // remote host.
-void memberlist::sendAndReceiveState(struct sockaddr_in& remote_node,bool join){
-    
-}
+void memberlist::sendAndReceiveState(struct sockaddr_in &remote_node, bool join)
+{
+    // This version of the implementation does not contain TCPTimeout
 
-// sendLocalState is invoked to send our local state over a stream connection.
-void memberlist::sendLocalState(struct sockaddr_in& remote_node,bool join){
-    {
-        lock_guard(nodeMutex);
-        vector<>
+    // Connection Timeout
+    int fd = Socket(AF_INET, SOCK_STREAM, 0);
+    ConnectTimeout(fd, (struct sockaddr *)&remote_node, sizeof(sockaddr), config.TCPTimeout);
+
+    struct timeval tcptimeout;
+    tcptimeout.tv_usec = config.TCPTimeout;
+
+    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (void *)&tcptimeout, sizeof(struct timeval));
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (void *)&tcptimeout, sizeof(struct timeval));
+
+    sendLocalState(fd, join);
+
+    auto pushpull=decodeReceiveTCP(fd);
+
+    if(pushpull.head()==MessageData::MessageType::MessageData_MessageType_errMsg){
+        logger<<"Remote error: "<<pushpull.errresp().error()<<endl;
+        return;
+    }
+
+    if(pushpull.head()!=MessageData::MessageType::MessageData_MessageType_pushPullMsg){
+        logger<<"Receive invalid msgType: "<<pushpull.head()<<", expected: "<<MessageData::MessageType::MessageData_MessageType_pushPullMsg<<endl;
+        return;
     }
 }
 
-#endif
+// sendLocalState is invoked to send our local state over a stream connection.
+void memberlist::sendLocalState(int fd, bool join)
+{
+    // This version of the implementation does not contain TCPTimeout
+    auto pushpull = genPushPull(join);
+    {
+        lock_guard<mutex> l(nodeMutex);
+        for (size_t i = 0; i < nodes.size(); i++)
+        {
+            addPushNodeState(pushpull, nodes[i]->Node.Name, nodes[i]->Node.Addr, nodes[i]->Node.Port, nodes[i]->Incarnation, PushNodeState::NodeStateType(nodes[i]->State));
+        }
+    }
+    encodeSendTCP(fd, pushpull);
+}
+
+void memberlist::mergeRemoteState(MessageData &pushpull){
+    
+}
+
+void memberlist::mergeRemoteState(vector<NodeState>& v){
+    
+}

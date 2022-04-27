@@ -38,5 +38,5 @@ void Pipe(int *pipedes);
 
 void Pipe2(int *pipedes,int flags);
 
-void Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval* timeout);
+int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval* timeout);
 #endif

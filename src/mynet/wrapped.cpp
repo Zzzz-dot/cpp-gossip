@@ -113,11 +113,12 @@ void Pipe2(int *pipedes,int flags){
     }
 }
 
-void Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval* timeout){
-    int e=select(nfds,readfds,writefds,exceptfds,timeout);
-    if(e<0){
-        errno=e;
+int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval* timeout){
+    int n=select(nfds,readfds,writefds,exceptfds,timeout);
+    if(n<0){
+        errno=n;
     }
+    return n;
 }
 
 #endif

@@ -58,7 +58,8 @@ private:
 
     void sendAndReceiveState(struct sockaddr_in& remote_node,bool join);
 
-    void sendLocalState(struct sockaddr_in& remote_node,bool join);
+    void sendLocalState(int fd,bool join);
+    void mergeRemoteState(MessageData& pushpull);
 
     //when an epoll event happens
     void handleevent();
