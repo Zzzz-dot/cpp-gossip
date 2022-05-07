@@ -2,6 +2,7 @@
 #define _NODE_H
 
 #include <misc/timer.hpp>
+#include <mynet/net.h>
 
 #include <iostream>
 #include <arpa/inet.h>
@@ -25,6 +26,11 @@ typedef struct Node
     uint16_t Port;
     NodeStateType State;
 
+    Node()=default;
+    Node(const string& name,const string& addr,uint16_t port):Name(name),Addr(addr),Port(port){};
+    Node(const string& name,const string& addr,uint16_t port,NodeStateType state):Name(name),Addr(addr),Port(port),State(state){};
+    Node(const Node& node):Name(node.Name),Addr(node.Addr),Port(node.Port),State(node.State){};
+
     struct sockaddr_in FullAddr()
     {
         struct sockaddr_in fulladdr;
@@ -41,10 +47,13 @@ typedef struct Node
 // NodeState is used to manage our state view of another node
 typedef struct NodeState
 {
-    Node Node;
+    Node N;
     uint32_t Incarnation;                                        // Last known incarnation number
     NodeStateType State;                                         // Current state
     chrono::duration<int64_t, chrono::microseconds> StateChange; // Time last state change happened
+
+    NodeState()=default;
+    NodeState(const Node &node,uint32_t incarnation,NodeStateType state):N(node),Incarnation(incarnation),State(state){};
     
     bool DeadOrLeft(){
         return State==StateDead||State==StateLeft;

@@ -4,9 +4,11 @@
 #include "node.h"
 #include "config.h"
 //MY INCLUDE DIR
+#include <misc/broadcastQueue.hpp>
 #include <misc/timer.hpp>
 #include <misc/util.hpp>
 #include <type/genmsg.h>
+#include <mynet/broadcast.h>
 #include <mynet/net.h>
 #include <mynet/wrapped.h>
 //SYS INCLUDE PATH
@@ -38,12 +40,16 @@ private:
     ostream logger;
 
     atomic<uint32_t> sequenceNum;      // Local sequence number
-    uint32_t nextSeqNum(){ return sequenceNum.fetch_add(1);};
-    uint32_t incarnation;      // Local incarnation number
+    uint32_t nextSeqNum(){ sequenceNum.fetch_add(1); return sequenceNum.load(); };
+    atomic<uint32_t> incarnation;      // Local incarnation number
+    uint32_t nextIncarnation(){ incarnation.fetch_add(1); return incarnation.load(); };
+    uint32_t skipIncarnation(uint32_t offset){ incarnation.fetch_add(offset); return incarnation.load(); };
     atomic<uint32_t> numNodes; // Number of known nodes (estimate)
     uint32_t pushPullReq;      // Number of push/pull requests
 
     config config; // Config of this member
+    atomic<bool> leave;
+    atomic<bool> shutdown;
 
     int tcpfd;                            // FD of the TCP Socket
     int udpfd;                            // FD of the UDP Socker
@@ -56,10 +62,20 @@ private:
     map<string, NodeState *> nodeTimers; // Maps Node.Name -> suspicion timer
     vector<NodeState> kRandomNodes(uint8_t k,function<bool(NodeState *n)> exclude);
 
-    void sendAndReceiveState(struct sockaddr_in& remote_node,bool join);
-
+    void pushPullNode(struct sockaddr_in& remote_node,bool join);
+    MessageData sendAndReceiveState(struct sockaddr_in& remote_node,bool join);
     void sendLocalState(int fd,bool join);
     void mergeRemoteState(MessageData& pushpull);
+
+    void aliveNode(Alive &a,bool bootstrap,int notifyfd);
+    void refute(NodeState *me, uint32_t accusedInc);
+    void deadNode(Dead &d);
+    void suspectNode(Suspect &s);
+
+    broadcastQueue TransmitLimitedQueue;
+    void encodeAndBroadcast(string node,const Compound &cd);
+    void encodeBroadcastNotify(string node, const Compound &cd,int notifyfd);
+    string getBroadcasts(size_t overhead, size_t limit)
 
     //when an epoll event happens
     void handleevent();
@@ -94,7 +110,9 @@ private:
 public:
     void newmemberlist();
     void clearmemberlist();
-    memberlist(/* args */) : scheduled(false){
+    
+    memberlist(){
+        scheduled=false;
         sequenceNum.store(0);
     };
     ~memberlist();

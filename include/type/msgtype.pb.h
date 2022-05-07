@@ -47,7 +47,7 @@ struct TableStruct_msgtype_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[12]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[13]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -60,6 +60,9 @@ extern AckRespDefaultTypeInternal _AckResp_default_instance_;
 class Alive;
 struct AliveDefaultTypeInternal;
 extern AliveDefaultTypeInternal _Alive_default_instance_;
+class Compound;
+struct CompoundDefaultTypeInternal;
+extern CompoundDefaultTypeInternal _Compound_default_instance_;
 class Dead;
 struct DeadDefaultTypeInternal;
 extern DeadDefaultTypeInternal _Dead_default_instance_;
@@ -93,6 +96,7 @@ extern UserDefaultTypeInternal _User_default_instance_;
 PROTOBUF_NAMESPACE_OPEN
 template<> ::AckResp* Arena::CreateMaybeMessage<::AckResp>(Arena*);
 template<> ::Alive* Arena::CreateMaybeMessage<::Alive>(Arena*);
+template<> ::Compound* Arena::CreateMaybeMessage<::Compound>(Arena*);
 template<> ::Dead* Arena::CreateMaybeMessage<::Dead>(Arena*);
 template<> ::ErrResp* Arena::CreateMaybeMessage<::ErrResp>(Arena*);
 template<> ::IndirectPing* Arena::CreateMaybeMessage<::IndirectPing>(Arena*);
@@ -167,6 +171,161 @@ inline bool PushNodeState_NodeStateType_Parse(
 }
 // ===================================================================
 
+class Compound final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Compound) */ {
+ public:
+  inline Compound() : Compound(nullptr) {}
+  ~Compound() override;
+  explicit constexpr Compound(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Compound(const Compound& from);
+  Compound(Compound&& from) noexcept
+    : Compound() {
+    *this = ::std::move(from);
+  }
+
+  inline Compound& operator=(const Compound& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Compound& operator=(Compound&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Compound& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Compound* internal_default_instance() {
+    return reinterpret_cast<const Compound*>(
+               &_Compound_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    0;
+
+  friend void swap(Compound& a, Compound& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Compound* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Compound* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Compound* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Compound>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Compound& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const Compound& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Compound* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Compound";
+  }
+  protected:
+  explicit Compound(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kMdsFieldNumber = 1,
+  };
+  // repeated .MessageData mds = 1;
+  int mds_size() const;
+  private:
+  int _internal_mds_size() const;
+  public:
+  void clear_mds();
+  ::MessageData* mutable_mds(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::MessageData >*
+      mutable_mds();
+  private:
+  const ::MessageData& _internal_mds(int index) const;
+  ::MessageData* _internal_add_mds();
+  public:
+  const ::MessageData& mds(int index) const;
+  ::MessageData* add_mds();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::MessageData >&
+      mds() const;
+
+  // @@protoc_insertion_point(class_scope:Compound)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::MessageData > mds_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_msgtype_2eproto;
+};
+// -------------------------------------------------------------------
+
 class MessageData final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:MessageData) */ {
  public:
@@ -229,7 +388,7 @@ class MessageData final :
                &_MessageData_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    0;
+    1;
 
   friend void swap(MessageData& a, MessageData& b) {
     a.Swap(&b);
@@ -642,7 +801,7 @@ class Ping final :
                &_Ping_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    1;
+    2;
 
   friend void swap(Ping& a, Ping& b) {
     a.Swap(&b);
@@ -847,7 +1006,7 @@ class IndirectPing final :
                &_IndirectPing_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    3;
 
   friend void swap(IndirectPing& a, IndirectPing& b) {
     a.Swap(&b);
@@ -1090,7 +1249,7 @@ class AckResp final :
                &_AckResp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    3;
+    4;
 
   friend void swap(AckResp& a, AckResp& b) {
     a.Swap(&b);
@@ -1236,7 +1395,7 @@ class NackResp final :
                &_NackResp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    4;
+    5;
 
   friend void swap(NackResp& a, NackResp& b) {
     a.Swap(&b);
@@ -1382,7 +1541,7 @@ class ErrResp final :
                &_ErrResp_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    6;
 
   friend void swap(ErrResp& a, ErrResp& b) {
     a.Swap(&b);
@@ -1533,7 +1692,7 @@ class Suspect final :
                &_Suspect_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    7;
 
   friend void swap(Suspect& a, Suspect& b) {
     a.Swap(&b);
@@ -1711,7 +1870,7 @@ class Alive final :
                &_Alive_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    8;
 
   friend void swap(Alive& a, Alive& b) {
     a.Swap(&b);
@@ -1900,7 +2059,7 @@ class Dead final :
                &_Dead_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    9;
 
   friend void swap(Dead& a, Dead& b) {
     a.Swap(&b);
@@ -2078,7 +2237,7 @@ class PushPull final :
                &_PushPull_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    10;
 
   friend void swap(PushPull& a, PushPull& b) {
     a.Swap(&b);
@@ -2244,7 +2403,7 @@ class PushNodeState final :
                &_PushNodeState_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    10;
+    11;
 
   friend void swap(PushNodeState& a, PushNodeState& b) {
     a.Swap(&b);
@@ -2478,7 +2637,7 @@ class User final :
                &_User_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    11;
+    12;
 
   friend void swap(User& a, User& b) {
     a.Swap(&b);
@@ -2588,6 +2747,50 @@ class User final :
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
+// Compound
+
+// repeated .MessageData mds = 1;
+inline int Compound::_internal_mds_size() const {
+  return mds_.size();
+}
+inline int Compound::mds_size() const {
+  return _internal_mds_size();
+}
+inline void Compound::clear_mds() {
+  mds_.Clear();
+}
+inline ::MessageData* Compound::mutable_mds(int index) {
+  // @@protoc_insertion_point(field_mutable:Compound.mds)
+  return mds_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::MessageData >*
+Compound::mutable_mds() {
+  // @@protoc_insertion_point(field_mutable_list:Compound.mds)
+  return &mds_;
+}
+inline const ::MessageData& Compound::_internal_mds(int index) const {
+  return mds_.Get(index);
+}
+inline const ::MessageData& Compound::mds(int index) const {
+  // @@protoc_insertion_point(field_get:Compound.mds)
+  return _internal_mds(index);
+}
+inline ::MessageData* Compound::_internal_add_mds() {
+  return mds_.Add();
+}
+inline ::MessageData* Compound::add_mds() {
+  ::MessageData* _add = _internal_add_mds();
+  // @@protoc_insertion_point(field_add:Compound.mds)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::MessageData >&
+Compound::mds() const {
+  // @@protoc_insertion_point(field_list:Compound.mds)
+  return mds_;
+}
+
+// -------------------------------------------------------------------
+
 // MessageData
 
 // .MessageData.MessageType Head = 1;
@@ -4633,6 +4836,8 @@ inline void User::set_allocated_msg(std::string* msg) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

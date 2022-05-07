@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <arpa/inet.h>
+#include <cmath>
+
 using namespace std;
 
 struct sockaddr_in resolveAddr(const string &s){
@@ -48,4 +50,11 @@ bool hasPort(const string &s){
     }
     return true;
 }
+
+uint32_t retransmitLimit(uin8_t retransmitMult, uint32_t n){
+    uint32_t nodeScale=ceil(log10(n+1));
+    uint32_t limit=retransmitMult*nodeScale;
+    return limit;
+}
+
 #endif

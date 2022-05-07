@@ -2,8 +2,6 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#include <memberlist/memberlist.h>
-
 #include <chrono>
 #include <mutex>
 #include <condition_variable>
@@ -12,6 +10,8 @@
 #include <cmath>
 
 using namespace std;
+
+class memberlist;
 
 #define pushPullScaleThreshold 32
 uint32_t pushPullScale(uint32_t timeinterval_,uint32_t n){
@@ -50,6 +50,7 @@ public:
                     auto wait_time = this->timeinterval;
                     if(this->scalable)
                         wait_time=pushPullScale(wait_time,this->estNumNodes());
+                    
                     this->cv.wait_for(l, chrono::microseconds(wait_time), [this]
                                       { return !this->running; });
                 }

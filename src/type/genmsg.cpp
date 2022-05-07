@@ -5,10 +5,11 @@
 #include <iostream>
 using namespace std;
 
-MessageData genPing(uint32_t seqno,const string &node,const string &sourceaddr,uint32_t sourceport,const string &sourcenode){
+MessageData genPing(uint32_t seqno, const string &node, const string &sourceaddr, uint32_t sourceport, const string &sourcenode)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_pingMsg);
-    Ping* p=md.mutable_ping();
+    Ping *p = md.mutable_ping();
     p->set_seqno(seqno);
     p->set_node(node);
     p->set_sourceaddr(sourceaddr);
@@ -17,10 +18,11 @@ MessageData genPing(uint32_t seqno,const string &node,const string &sourceaddr,u
     return md;
 }
 
-MessageData genIndirectPing(uint32_t seqno,const string &node,const string &targetaddr,uint32_t targetport,bool nack,const string &sourceaddr,uint32_t sourceport,const string &sourcenode){
+MessageData genIndirectPing(uint32_t seqno, const string &node, const string &targetaddr, uint32_t targetport, bool nack, const string &sourceaddr, uint32_t sourceport, const string &sourcenode)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_indirectPingMsg);
-    IndirectPing* p=md.mutable_indirectping();
+    IndirectPing *p = md.mutable_indirectping();
     p->set_seqno(seqno);
     p->set_node(node);
     p->set_targetaddr(targetaddr);
@@ -32,44 +34,58 @@ MessageData genIndirectPing(uint32_t seqno,const string &node,const string &targ
     return md;
 }
 
-MessageData genAckResp(uint32_t seqno){
+MessageData genAckResp(uint32_t seqno)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_ackRespMsg);
-    AckResp* p=md.mutable_ackresp();
+    AckResp *p = md.mutable_ackresp();
     p->set_seqno(seqno);
     return md;
 }
 
-MessageData genNackResp(uint32_t seqno){
+MessageData genNackResp(uint32_t seqno)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_nackRespMsg);
-    NackResp* p=md.mutable_nackresp();
+    NackResp *p = md.mutable_nackresp();
     p->set_seqno(seqno);
     return md;
 }
 
-MessageData genErrResp(const string &error){
+MessageData genErrResp(const string &error)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_errMsg);
-    ErrResp* p=md.mutable_errresp();
+    ErrResp *p = md.mutable_errresp();
     p->set_error(error);
     return md;
 }
 
-MessageData genSuspect(uint32_t incarnation,const string &node,const string &from){
+MessageData genSuspect(uint32_t incarnation, const string &node, const string &from)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_suspectMsg);
-    Suspect* p=md.mutable_suspect();
+    Suspect *p = md.mutable_suspect();
     p->set_incarnation(incarnation);
     p->set_node(node);
     p->set_from(from);
     return md;
 }
 
-MessageData genAlive(uint32_t incarnation,const string &node,const string &addr,uint32_t port){
+MessageData genSuspect(const Suspect &s)
+{
+    MessageData md;
+    md.set_head(MessageData_MessageType::MessageData_MessageType_suspectMsg);
+    Suspect *p = md.mutable_suspect();
+    *p=s;
+    return md;
+}
+
+MessageData genAlive(uint32_t incarnation, const string &node, const string &addr, uint32_t port)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_aliveMsg);
-    Alive* p=md.mutable_alive();
+    Alive *p = md.mutable_alive();
     p->set_incarnation(incarnation);
     p->set_node(node);
     p->set_addr(addr);
@@ -77,31 +93,93 @@ MessageData genAlive(uint32_t incarnation,const string &node,const string &addr,
     return md;
 }
 
-MessageData genDead(uint32_t incarnation,const string &node,const string &from){
+MessageData genAlive(const Alive &a)
+{
+    MessageData md;
+    md.set_head(MessageData_MessageType::MessageData_MessageType_aliveMsg);
+    Alive *p = md.mutable_alive();
+    *p=a;
+    return md;
+}
+
+MessageData genDead(uint32_t incarnation, const string &node, const string &from)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_deadMsg);
-    Dead* p=md.mutable_dead();
+    Dead *p = md.mutable_dead();
     p->set_incarnation(incarnation);
     p->set_node(node);
     p->set_from(from);
     return md;
 }
 
-MessageData genPushPull(bool join){
+MessageData genDead(const Dead &d)
+{
+    MessageData md;
+    md.set_head(MessageData_MessageType::MessageData_MessageType_deadMsg);
+    Dead *p = md.mutable_dead();
+    *p=d;
+    return md;
+}
+
+MessageData genPushPull(bool join)
+{
     MessageData md;
     md.set_head(MessageData_MessageType::MessageData_MessageType_pushPullMsg);
-    PushPull* p=md.mutable_pushpull();
+    PushPull *p = md.mutable_pushpull();
     p->set_join(join);
     return md;
 }
 
-void addPushNodeState(MessageData &md,const string& name,const string& addr,uint32_t port,uint32_t incarnation,PushNodeState::NodeStateType state){
-    PushPull* p=md.mutable_pushpull();
-    auto nds=p->mutable_states();
-    PushNodeState *nd=nds->Add();
+void addPushNodeState(MessageData &md, const string &name, const string &addr, uint32_t port, uint32_t incarnation, PushNodeState::NodeStateType state)
+{
+    PushPull *p = md.mutable_pushpull();
+    auto nds = p->mutable_states();
+    PushNodeState *nd = nds->Add();
     nd->set_name(name);
     nd->set_addr(addr);
     nd->set_port(port);
     nd->set_incarnation(incarnation);
     nd->set_state(state);
+}
+
+Suspect getSuspect(uint32_t incarnation, const string &node, const string &from)
+{
+    Suspect s;
+    s.set_incarnation(incarnation);
+    s.set_node(node);
+    s.set_from(from);
+    return s;
+}
+
+Alive getAlive(uint32_t incarnation, const string &node, const string &addr, uint32_t port)
+{
+    Alive a;
+    a.set_incarnation(incarnation);
+    a.set_node(node);
+    a.set_addr(addr);
+    a.set_port(port);
+    return a;
+}
+
+Dead getDead(uint32_t incarnation, const string &node, const string &from)
+{
+    Dead d;
+    d.set_incarnation(incarnation);
+    d.set_node(node);
+    d.set_from(from);
+    return d;
+}
+
+Compound genCompound()
+{
+    Compound cd;
+    return cd;
+}
+
+void addMessage(Compound &cd, MessageData md_)
+{
+    auto mds = cd.mutable_mds();
+    MessageData *md = mds->Add();
+    *md = md_;
 }

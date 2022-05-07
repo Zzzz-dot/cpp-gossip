@@ -1,12 +1,12 @@
 # TEST1
-add_executable(queueTest safe_queue_test.cpp)
+#add_executable(queueTest broadcastQueue_test.cpp)
 
-add_test(queuetest queueTest)
+#add_test(queuetest queueTest)
 
 # TEST2
-add_executable(timerTest timer_test.cpp)
+#add_executable(timerTest timer_test.cpp)
 
-add_test(timertest timerTest)
+#add_test(timertest timerTest)
 
 # TEST3
 # generate excutable genmsgTest

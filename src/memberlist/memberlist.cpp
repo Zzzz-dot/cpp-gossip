@@ -48,7 +48,7 @@ void memberlist::join(const string& cluster_addr){
     struct sockaddr_in remote_addr=resolveAddr(cluster_addr);
 }
 
-memberlist::memberlist(/* args */):scheduled(false)
+memberlist::memberlist():scheduled(false)
 {
     newmemberlist();
 
@@ -137,7 +137,7 @@ START:
 
 	    node = *nodes[probeIndex];
         l.unlock();
-	    if (node.Node.Name == config.Name) {
+	    if (node.N.Name == config.Name) {
 		    skip = true;
 	    } else if (node.DeadOrLeft()) {
 		    skip = true;
@@ -158,7 +158,7 @@ START:
 void memberlist::probenode(NodeState &node)
 {
     uint32_t seqno=nextSeqNum();
-    auto ping=genPing(seqno,node.Node.Name,config.BindAddr,config.BindPort,config.Name);
+    auto ping=genPing(seqno,node.N.Name,config.BindAddr,config.BindPort,config.Name);
 
     //匿名管道
     //Empty Msg can be sent to nackfd, but not ackfd
@@ -170,7 +170,7 @@ void memberlist::probenode(NodeState &node)
     //Set Probe Pipes
     setprobepipes(seqno,ackfd[1],nackfd[1],config.ProbeInterval);
 
-    struct sockaddr_in addr=node.Node.FullAddr();
+    struct sockaddr_in addr=node.N.FullAddr();
 
     int64_t sendtime=chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
 
@@ -183,7 +183,7 @@ void memberlist::probenode(NodeState &node)
     else{
         //This two messages con be composed into one compound message, but currently our implementation doesn't support compound message yet 
         encodeSendUDP(udpfd,&addr,ping);
-        auto suspect=genSuspect(node.Incarnation,node.Node.Name,config.Name);
+        auto suspect=genSuspect(node.Incarnation,node.N.Name,config.Name);
         encodeSendUDP(udpfd,&addr,suspect);
     }
 
@@ -208,7 +208,7 @@ void memberlist::probenode(NodeState &node)
     //Probe Timeout
     else{
         #ifdef DEBUG
-        logger<<"[DEBUG] memberlist: Failed UDP ping: "<<node.Node.Name<<" (timeout reached)"<<endl;
+        logger<<"[DEBUG] memberlist: Failed UDP ping: "<<node.N.Name<<" (timeout reached)"<<endl;
         #endif
     }
 
@@ -217,13 +217,13 @@ void memberlist::probenode(NodeState &node)
     {
         lock_guard<mutex> l(nodeMutex);
         kNodes=kRandomNodes(config.IndirectChecks,[this](NodeState *n)->bool{
-            return n->Node.Name==this->config.Name||n->State!=StateAlive;
+            return n->N.Name==this->config.Name||n->State!=StateAlive;
         });
     }
 
-    auto indirectping=genIndirectPing(seqno,node.Node.Name,node.Node.Addr,node.Node.Port,true,config.BindAddr,config.BindPort,config.Name);
+    auto indirectping=genIndirectPing(seqno,node.N.Name,node.N.Addr,node.N.Port,true,config.BindAddr,config.BindPort,config.Name);
     for(size_t i=0;i<kNodes.size();i++){
-        struct sockaddr_in addr=kNodes[i].Node.FullAddr();
+        struct sockaddr_in addr=kNodes[i].N.FullAddr();
         encodeSendUDP(udpfd,&addr,indirectping);
     }
 
@@ -237,8 +237,8 @@ void memberlist::probenode(NodeState &node)
     }
 
     //This node may fail, gossip suspect
-    logger<<"[INFO] memberlist: Suspect "<<node.Node.Name<<" has failed, no acks received!"<<endl;
-    auto suspect=genSuspect(node.Incarnation,node.Node.Name,config.Name);
+    logger<<"[INFO] memberlist: Suspect "<<node.N.Name<<" has failed, no acks received!"<<endl;
+    auto suspect=genSuspect(node.Incarnation,node.N.Name,config.Name);
     //suspectnode(node);
 }
 
@@ -288,7 +288,7 @@ vector<NodeState> memberlist::kRandomNodes(uint8_t k,function<bool(NodeState *n)
         }
 
         for(int j=0;j<kNodes.size();j++){
-            if(nodes[idx]->Node.Name==kNodes[j].Node.Name){
+            if(nodes[idx]->N.Name==kNodes[j].N.Name){
                 continue;
             }
         }

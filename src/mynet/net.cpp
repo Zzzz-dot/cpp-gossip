@@ -34,6 +34,47 @@ MessageData decodeReceiveTCP(int fd)
     return md;
 }
 
+void beforeSend(const MessageData &md, string *s)
+{
+    if (md.SerializeToString(s) == false)
+    {
+        cout << "SerializeToString Error!" << endl;
+        return;
+    }
+}
+
+string beforeSend(const MessageData &md)
+{
+    string s = md.SerializeAsString();
+    if (s.empty())
+    {
+        cout << "SerializeAsString Error!" << endl;
+    }
+    return s;
+}
+
+void encodeSendTCP(int fd, const MessageData &md)
+{
+#ifdef DEBUG
+    cout << "[DEBUG] Send TCP Message:" << endl;
+    cout << md.DebugString() << endl;
+#endif
+    string encodeMsg = beforeSend(md);
+    Write(fd, encodeMsg.c_str(), encodeMsg.size());
+};
+
+void encodeSendUDP(int fd, const struct sockaddr_in *remote_addr, const MessageData &md)
+{
+#ifdef DEBUG
+    cout << "[DEBUG] Send UDP Message:" << endl;
+    cout << md.DebugString() << endl;
+#endif
+    string encodeMsg = beforeSend(md);
+    Sendto(fd, encodeMsg.c_str(), encodeMsg.size(), 0, (struct sockaddr *)remote_addr, sizeof(sockaddr));
+};
+
+
+
 // Socket timeout setting mode:
 
 // 1. Call alarm, which generates SIGALARM when the specified timeout expires. This approach involves signal processing,
@@ -105,48 +146,9 @@ void ConnectTimeout(int fd, const struct sockaddr *addr, socklen_t len, uint32_t
     }
 }
 
-void beforeSend(const MessageData &md, string *s)
-{
-    if (md.SerializeToString(s) == false)
-    {
-        cout << "SerializeToString Error!" << endl;
-        return;
-    }
-}
-
-string beforeSend(const MessageData &md)
-{
-    string s = md.SerializeAsString();
-    if (s.empty())
-    {
-        cout << "SerializeAsString Error!" << endl;
-    }
-    return s;
-}
-
-void encodeSendTCP(int fd, const MessageData &md)
-{
-#ifdef DEBUG
-    cout << "[DEBUG] Send TCP Message:" << endl;
-    cout << md.DebugString() << endl;
-#endif
-    string encodeMsg = beforeSend(md);
-    Write(fd, encodeMsg.c_str(), encodeMsg.size());
-};
-
-void encodeSendUDP(int fd, const struct sockaddr_in *remote_addr, const MessageData &md)
-{
-#ifdef DEBUG
-    cout << "[DEBUG] Send UDP Message:" << endl;
-    cout << md.DebugString() << endl;
-#endif
-    string encodeMsg = beforeSend(md);
-    Sendto(fd, encodeMsg.c_str(), encodeMsg.size(), 0, (struct sockaddr *)remote_addr, sizeof(sockaddr));
-};
-
 // sendAndReceiveState is used to initiate a push/pull over a stream with a
 // remote host.
-void memberlist::sendAndReceiveState(struct sockaddr_in &remote_node, bool join)
+MessageData memberlist::sendAndReceiveState(struct sockaddr_in &remote_node, bool join)
 {
     // This version of the implementation does not contain TCPTimeout
 
@@ -173,6 +175,7 @@ void memberlist::sendAndReceiveState(struct sockaddr_in &remote_node, bool join)
         logger<<"Receive invalid msgType: "<<pushpull.head()<<", expected: "<<MessageData::MessageType::MessageData_MessageType_pushPullMsg<<endl;
         return;
     }
+    return pushpull;
 }
 
 // sendLocalState is invoked to send our local state over a stream connection.
@@ -191,7 +194,27 @@ void memberlist::sendLocalState(int fd, bool join)
 }
 
 void memberlist::mergeRemoteState(MessageData &pushpull){
-    
+    auto &states=pushpull.pushpull().states();
+    int size=pushpull.pushpull().states_size();
+    for (int i=0;i<size;i++){
+        auto &state=states[i];
+        switch (state.state())
+        {
+        case PushNodeState::StateAlive:
+            auto a=getAlive(state.incarnation(),state.name(),state.addr(),state.port());
+            aliveNode(a,false,NULL);
+            break;
+        case PushNodeState::StateLeft:
+
+            break;
+        case PushNodeState::StateDead:
+			// If the remote node believes a node is dead, we prefer to
+			// suspect that node instead of declaring it dead instantly
+        case PushNodeState::StateSuspect:
+
+            break;
+        }
+    }
 }
 
 void memberlist::mergeRemoteState(vector<NodeState>& v){

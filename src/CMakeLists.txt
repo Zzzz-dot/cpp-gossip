@@ -12,13 +12,17 @@ target_link_directories(genmsg PRIVATE "/usr/local/usr")
 # add protobuf linkfile to the link
 target_link_libraries(genmsg "protobuf")
 
-# MEMBERLIST
+# MEMBERLIST:
+
 aux_source_directory(memberlist memberlistfile)
+
 add_library(memberlist ${memberlistfile})
 
 add_dependencies(memberlist genmsg)
 
 target_link_libraries(memberlist genmsg)
+
+#MYNET: 
 
 aux_source_directory(mynet mynetfile)
 
