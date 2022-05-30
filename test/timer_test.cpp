@@ -1,4 +1,4 @@
-#include <misc/timer.hpp>
+#include <misc/timer.h>
 
 #include <iostream>
 #include <chrono>
@@ -7,13 +7,12 @@
 using namespace std;
 
 int main(){
-    auto f=[](){
-        cout<<1<<endl;
+    int64_t timeinerval=2000000;
+    auto task1=[](){
+        cout<<"task1"<<endl;
     };
-    uint32_t timeint=1000;
-    timer t(timeint,f);
-    t.Run();
-    sleep(15);
-    t.Stop();
+    auto ot=make_shared<onceTimer>(timeinerval,task1,nullptr);
+
+    
     return 0;
 }

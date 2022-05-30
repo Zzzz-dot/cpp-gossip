@@ -1,22 +1,44 @@
 # TEST1
-#add_executable(queueTest broadcastQueue_test.cpp)
+add_executable(queueTest broadcastQueue_test.cpp)
 
-#add_test(queuetest queueTest)
+target_link_libraries(queueTest misc)
+
+add_test(queuetest queueTest)
 
 # TEST2
-#add_executable(timerTest timer_test.cpp)
+add_executable(timerTest timer_test.cpp)
 
-#add_test(timertest timerTest)
+add_dependencies(timerTest misc)
+
+target_link_libraries(timerTest misc)
+
+add_test(timertest timerTest)
 
 # TEST3
 # generate excutable genmsgTest
 add_executable(genmsgTest genmsg_test.cpp)
 
 # this excutable depends on genmsg library
-add_dependencies(genmsgTest genmsg)
+add_dependencies(genmsgTest type)
 
 # link genmsg library to this excutable
-target_link_libraries(genmsgTest genmsg)
+target_link_libraries(genmsgTest type)
 
 # add test, name: genmsgtest, command: genmsgTest
 add_test(genmsgtest genmsgTest)
+
+# TEST4
+add_executable(configTest config_test.cpp)
+
+add_dependencies(configTest memberlist)
+
+target_link_libraries(configTest memberlist)
+
+add_test(configtest configTest)
+
+# PIPE
+add_executable(pipeTest pipe_test.cpp)
+
+target_link_libraries(pipeTest pthread)
+
+add_test(pipetest pipeTest)

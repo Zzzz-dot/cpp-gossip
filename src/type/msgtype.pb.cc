@@ -198,8 +198,34 @@ struct UserDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT UserDefaultTypeInternal _User_default_instance_;
-static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_msgtype_2eproto[13];
-static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_msgtype_2eproto[2];
+constexpr ComBroadcast::ComBroadcast(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : bs_(){}
+struct ComBroadcastDefaultTypeInternal {
+  constexpr ComBroadcastDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~ComBroadcastDefaultTypeInternal() {}
+  union {
+    ComBroadcast _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT ComBroadcastDefaultTypeInternal _ComBroadcast_default_instance_;
+constexpr Broadcast::Broadcast(
+  ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized)
+  : type_(0)
+
+  , _oneof_case_{}{}
+struct BroadcastDefaultTypeInternal {
+  constexpr BroadcastDefaultTypeInternal()
+    : _instance(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized{}) {}
+  ~BroadcastDefaultTypeInternal() {}
+  union {
+    Broadcast _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT BroadcastDefaultTypeInternal _Broadcast_default_instance_;
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_msgtype_2eproto[15];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_msgtype_2eproto[3];
 static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_msgtype_2eproto = nullptr;
 
 const uint32_t TableStruct_msgtype_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
@@ -217,8 +243,6 @@ const uint32_t TableStruct_msgtype_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::MessageData, head_),
-  ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
-  ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
   ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
   ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
   ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
@@ -328,21 +352,41 @@ const uint32_t TableStruct_msgtype_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
   PROTOBUF_FIELD_OFFSET(::User, msg_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::ComBroadcast, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::ComBroadcast, bs_),
+  ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::Broadcast, _internal_metadata_),
+  ~0u,  // no _extensions_
+  PROTOBUF_FIELD_OFFSET(::Broadcast, _oneof_case_[0]),
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::Broadcast, type_),
+  ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
+  ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
+  ::PROTOBUF_NAMESPACE_ID::internal::kInvalidFieldOffsetTag,
+  PROTOBUF_FIELD_OFFSET(::Broadcast, Content_),
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::Compound)},
   { 7, -1, -1, sizeof(::MessageData)},
-  { 25, -1, -1, sizeof(::Ping)},
-  { 36, -1, -1, sizeof(::IndirectPing)},
-  { 50, -1, -1, sizeof(::AckResp)},
-  { 57, -1, -1, sizeof(::NackResp)},
-  { 64, -1, -1, sizeof(::ErrResp)},
-  { 71, -1, -1, sizeof(::Suspect)},
-  { 80, -1, -1, sizeof(::Alive)},
-  { 90, -1, -1, sizeof(::Dead)},
-  { 99, -1, -1, sizeof(::PushPull)},
-  { 107, -1, -1, sizeof(::PushNodeState)},
-  { 118, -1, -1, sizeof(::User)},
+  { 23, -1, -1, sizeof(::Ping)},
+  { 34, -1, -1, sizeof(::IndirectPing)},
+  { 48, -1, -1, sizeof(::AckResp)},
+  { 55, -1, -1, sizeof(::NackResp)},
+  { 62, -1, -1, sizeof(::ErrResp)},
+  { 69, -1, -1, sizeof(::Suspect)},
+  { 78, -1, -1, sizeof(::Alive)},
+  { 88, -1, -1, sizeof(::Dead)},
+  { 97, -1, -1, sizeof(::PushPull)},
+  { 105, -1, -1, sizeof(::PushNodeState)},
+  { 116, -1, -1, sizeof(::User)},
+  { 123, -1, -1, sizeof(::ComBroadcast)},
+  { 130, -1, -1, sizeof(::Broadcast)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -359,49 +403,56 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_PushPull_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_PushNodeState_default_instance_),
   reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_User_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_ComBroadcast_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::_Broadcast_default_instance_),
 };
 
 const char descriptor_table_protodef_msgtype_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
-  "\n\rmsgtype.proto\"%\n\010Compound\022\031\n\003mds\030\001 \003(\013"
-  "2\014.MessageData\"\377\003\n\013MessageData\022&\n\004Head\030\001"
+  "\n\rmsgtype.proto\"%\n\010Compound\022\031\n\003Mds\030\001 \003(\013"
+  "2\014.MessageData\"\301\003\n\013MessageData\022&\n\004Head\030\001"
   " \001(\0162\030.MessageData.MessageType\022\025\n\004ping\030\002"
   " \001(\0132\005.PingH\000\022%\n\014indirectping\030\003 \001(\0132\r.In"
   "directPingH\000\022\033\n\007ackresp\030\004 \001(\0132\010.AckRespH"
-  "\000\022\035\n\010nackresp\030\005 \001(\0132\t.NackRespH\000\022\033\n\007errr"
-  "esp\030\006 \001(\0132\010.ErrRespH\000\022\033\n\007suspect\030\007 \001(\0132\010"
-  ".SuspectH\000\022\027\n\005alive\030\010 \001(\0132\006.AliveH\000\022\025\n\004d"
-  "ead\030\t \001(\0132\005.DeadH\000\022\035\n\010pushpull\030\n \001(\0132\t.P"
-  "ushPullH\000\022\025\n\004user\030\013 \001(\0132\005.UserH\000\"\245\001\n\013Mes"
-  "sageType\022\013\n\007pingMsg\020\000\022\023\n\017indirectPingMsg"
-  "\020\001\022\016\n\nackRespMsg\020\002\022\016\n\nsuspectMsg\020\003\022\014\n\010al"
-  "iveMsg\020\004\022\013\n\007deadMsg\020\005\022\017\n\013pushPullMsg\020\006\022\013"
-  "\n\007userMsg\020\007\022\017\n\013nackRespMsg\020\010\022\n\n\006errMsg\020\t"
-  "B\006\n\004Body\"_\n\004Ping\022\r\n\005SeqNo\030\001 \001(\r\022\014\n\004Node\030"
-  "\002 \001(\t\022\022\n\nSourceAddr\030\003 \001(\t\022\022\n\nSourcePort\030"
-  "\004 \001(\r\022\022\n\nSourceNode\030\005 \001(\t\"\235\001\n\014IndirectPi"
-  "ng\022\r\n\005SeqNo\030\001 \001(\r\022\014\n\004Node\030\002 \001(\t\022\022\n\nTarge"
-  "tAddr\030\003 \001(\t\022\022\n\nTargetPort\030\004 \001(\r\022\014\n\004Nack\030"
-  "\005 \001(\010\022\022\n\nSourceAddr\030\006 \001(\t\022\022\n\nSourcePort\030"
-  "\007 \001(\r\022\022\n\nSourceNode\030\010 \001(\t\"\030\n\007AckResp\022\r\n\005"
-  "SeqNo\030\001 \001(\r\"\031\n\010NackResp\022\r\n\005SeqNo\030\001 \001(\r\"\030"
-  "\n\007ErrResp\022\r\n\005Error\030\001 \001(\t\":\n\007Suspect\022\023\n\013I"
-  "ncarnation\030\001 \001(\r\022\014\n\004Node\030\002 \001(\t\022\014\n\004From\030\003"
-  " \001(\t\"F\n\005Alive\022\023\n\013Incarnation\030\001 \001(\r\022\014\n\004No"
-  "de\030\002 \001(\t\022\014\n\004Addr\030\003 \001(\t\022\014\n\004Port\030\004 \001(\r\"7\n\004"
-  "Dead\022\023\n\013Incarnation\030\001 \001(\r\022\014\n\004Node\030\002 \001(\t\022"
-  "\014\n\004From\030\003 \001(\t\"8\n\010PushPull\022\014\n\004Join\030\001 \001(\010\022"
-  "\036\n\006States\030\002 \003(\0132\016.PushNodeState\"\314\001\n\rPush"
-  "NodeState\022\014\n\004Name\030\001 \001(\t\022\014\n\004Addr\030\002 \001(\t\022\014\n"
-  "\004Port\030\003 \001(\r\022\023\n\013Incarnation\030\004 \001(\r\022+\n\005Stat"
-  "e\030\005 \001(\0162\034.PushNodeState.NodeStateType\"O\n"
-  "\rNodeStateType\022\016\n\nStateAlive\020\000\022\020\n\014StateS"
-  "uspect\020\001\022\r\n\tStateDead\020\002\022\r\n\tStateLeft\020\003\"\023"
-  "\n\004User\022\013\n\003Msg\030\001 \001(\tb\006proto3"
+  "\000\022\035\n\010nackresp\030\005 \001(\0132\t.NackRespH\000\022\035\n\010push"
+  "pull\030\006 \001(\0132\t.PushPullH\000\022%\n\014combroadcast\030"
+  "\007 \001(\0132\r.ComBroadcastH\000\022\025\n\004user\030\010 \001(\0132\005.U"
+  "serH\000\022\033\n\007errresp\030\t \001(\0132\010.ErrRespH\000\"\215\001\n\013M"
+  "essageType\022\013\n\007pingMsg\020\000\022\023\n\017indirectPingM"
+  "sg\020\001\022\016\n\nackRespMsg\020\002\022\017\n\013nackRespMsg\020\003\022\017\n"
+  "\013pushPullMsg\020\004\022\021\n\rcompoundBroad\020\005\022\013\n\007use"
+  "rMsg\020\006\022\n\n\006errMsg\020\007B\006\n\004Body\"_\n\004Ping\022\r\n\005Se"
+  "qNo\030\001 \001(\r\022\014\n\004Node\030\002 \001(\t\022\022\n\nSourceAddr\030\003 "
+  "\001(\t\022\022\n\nSourcePort\030\004 \001(\r\022\022\n\nSourceNode\030\005 "
+  "\001(\t\"\235\001\n\014IndirectPing\022\r\n\005SeqNo\030\001 \001(\r\022\014\n\004N"
+  "ode\030\002 \001(\t\022\022\n\nTargetAddr\030\003 \001(\t\022\022\n\nTargetP"
+  "ort\030\004 \001(\r\022\014\n\004Nack\030\005 \001(\010\022\022\n\nSourceAddr\030\006 "
+  "\001(\t\022\022\n\nSourcePort\030\007 \001(\r\022\022\n\nSourceNode\030\010 "
+  "\001(\t\"\030\n\007AckResp\022\r\n\005SeqNo\030\001 \001(\r\"\031\n\010NackRes"
+  "p\022\r\n\005SeqNo\030\001 \001(\r\"\030\n\007ErrResp\022\r\n\005Error\030\001 \001"
+  "(\t\":\n\007Suspect\022\023\n\013Incarnation\030\001 \001(\r\022\014\n\004No"
+  "de\030\002 \001(\t\022\014\n\004From\030\003 \001(\t\"F\n\005Alive\022\023\n\013Incar"
+  "nation\030\001 \001(\r\022\014\n\004Node\030\002 \001(\t\022\014\n\004Addr\030\003 \001(\t"
+  "\022\014\n\004Port\030\004 \001(\r\"7\n\004Dead\022\023\n\013Incarnation\030\001 "
+  "\001(\r\022\014\n\004Node\030\002 \001(\t\022\014\n\004From\030\003 \001(\t\"8\n\010PushP"
+  "ull\022\014\n\004Join\030\001 \001(\010\022\036\n\006States\030\002 \003(\0132\016.Push"
+  "NodeState\"\314\001\n\rPushNodeState\022\014\n\004Name\030\001 \001("
+  "\t\022\014\n\004Addr\030\002 \001(\t\022\014\n\004Port\030\003 \001(\r\022\023\n\013Incarna"
+  "tion\030\004 \001(\r\022+\n\005State\030\005 \001(\0162\034.PushNodeStat"
+  "e.NodeStateType\"O\n\rNodeStateType\022\016\n\nStat"
+  "eAlive\020\000\022\020\n\014StateSuspect\020\001\022\r\n\tStateDead\020"
+  "\002\022\r\n\tStateLeft\020\003\"\023\n\004User\022\013\n\003Msg\030\001 \001(\t\"&\n"
+  "\014ComBroadcast\022\026\n\002Bs\030\001 \003(\0132\n.Broadcast\"\307\001"
+  "\n\tBroadcast\022&\n\004Type\030\001 \001(\0162\030.Broadcast.Br"
+  "oadcastType\022\027\n\005alive\030\002 \001(\0132\006.AliveH\000\022\025\n\004"
+  "dead\030\003 \001(\0132\005.DeadH\000\022\033\n\007suspect\030\004 \001(\0132\010.S"
+  "uspectH\000\":\n\rBroadcastType\022\014\n\010aliveMsg\020\000\022"
+  "\013\n\007deadMsg\020\001\022\016\n\nsuspectMsg\020\002B\t\n\007Contentb"
+  "\006proto3"
   ;
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_msgtype_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_msgtype_2eproto = {
-  false, false, 1387, descriptor_table_protodef_msgtype_2eproto, "msgtype.proto", 
-  &descriptor_table_msgtype_2eproto_once, nullptr, 0, 13,
+  false, false, 1567, descriptor_table_protodef_msgtype_2eproto, "msgtype.proto", 
+  &descriptor_table_msgtype_2eproto_once, nullptr, 0, 15,
   schemas, file_default_instances, TableStruct_msgtype_2eproto::offsets,
   file_level_metadata_msgtype_2eproto, file_level_enum_descriptors_msgtype_2eproto, file_level_service_descriptors_msgtype_2eproto,
 };
@@ -425,8 +476,6 @@ bool MessageData_MessageType_IsValid(int value) {
     case 5:
     case 6:
     case 7:
-    case 8:
-    case 9:
       return true;
     default:
       return false;
@@ -437,12 +486,10 @@ bool MessageData_MessageType_IsValid(int value) {
 constexpr MessageData_MessageType MessageData::pingMsg;
 constexpr MessageData_MessageType MessageData::indirectPingMsg;
 constexpr MessageData_MessageType MessageData::ackRespMsg;
-constexpr MessageData_MessageType MessageData::suspectMsg;
-constexpr MessageData_MessageType MessageData::aliveMsg;
-constexpr MessageData_MessageType MessageData::deadMsg;
-constexpr MessageData_MessageType MessageData::pushPullMsg;
-constexpr MessageData_MessageType MessageData::userMsg;
 constexpr MessageData_MessageType MessageData::nackRespMsg;
+constexpr MessageData_MessageType MessageData::pushPullMsg;
+constexpr MessageData_MessageType MessageData::compoundBroad;
+constexpr MessageData_MessageType MessageData::userMsg;
 constexpr MessageData_MessageType MessageData::errMsg;
 constexpr MessageData_MessageType MessageData::MessageType_MIN;
 constexpr MessageData_MessageType MessageData::MessageType_MAX;
@@ -472,6 +519,29 @@ constexpr PushNodeState_NodeStateType PushNodeState::StateLeft;
 constexpr PushNodeState_NodeStateType PushNodeState::NodeStateType_MIN;
 constexpr PushNodeState_NodeStateType PushNodeState::NodeStateType_MAX;
 constexpr int PushNodeState::NodeStateType_ARRAYSIZE;
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Broadcast_BroadcastType_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_msgtype_2eproto);
+  return file_level_enum_descriptors_msgtype_2eproto[2];
+}
+bool Broadcast_BroadcastType_IsValid(int value) {
+  switch (value) {
+    case 0:
+    case 1:
+    case 2:
+      return true;
+    default:
+      return false;
+  }
+}
+
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
+constexpr Broadcast_BroadcastType Broadcast::aliveMsg;
+constexpr Broadcast_BroadcastType Broadcast::deadMsg;
+constexpr Broadcast_BroadcastType Broadcast::suspectMsg;
+constexpr Broadcast_BroadcastType Broadcast::BroadcastType_MIN;
+constexpr Broadcast_BroadcastType Broadcast::BroadcastType_MAX;
+constexpr int Broadcast::BroadcastType_ARRAYSIZE;
 #endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || (_MSC_VER >= 1900 && _MSC_VER < 1912))
 
 // ===================================================================
@@ -537,7 +607,7 @@ const char* Compound::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::i
     uint32_t tag;
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     switch (tag >> 3) {
-      // repeated .MessageData mds = 1;
+      // repeated .MessageData Mds = 1;
       case 1:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
           ptr -= 1;
@@ -579,7 +649,7 @@ uint8_t* Compound::_InternalSerialize(
   uint32_t cached_has_bits = 0;
   (void) cached_has_bits;
 
-  // repeated .MessageData mds = 1;
+  // repeated .MessageData Mds = 1;
   for (unsigned int i = 0,
       n = static_cast<unsigned int>(this->_internal_mds_size()); i < n; i++) {
     target = stream->EnsureSpace(target);
@@ -603,7 +673,7 @@ size_t Compound::ByteSizeLong() const {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  // repeated .MessageData mds = 1;
+  // repeated .MessageData Mds = 1;
   total_size += 1UL * this->_internal_mds_size();
   for (const auto& msg : this->mds_) {
     total_size +=
@@ -667,12 +737,10 @@ class MessageData::_Internal {
   static const ::IndirectPing& indirectping(const MessageData* msg);
   static const ::AckResp& ackresp(const MessageData* msg);
   static const ::NackResp& nackresp(const MessageData* msg);
-  static const ::ErrResp& errresp(const MessageData* msg);
-  static const ::Suspect& suspect(const MessageData* msg);
-  static const ::Alive& alive(const MessageData* msg);
-  static const ::Dead& dead(const MessageData* msg);
   static const ::PushPull& pushpull(const MessageData* msg);
+  static const ::ComBroadcast& combroadcast(const MessageData* msg);
   static const ::User& user(const MessageData* msg);
+  static const ::ErrResp& errresp(const MessageData* msg);
 };
 
 const ::Ping&
@@ -691,29 +759,21 @@ const ::NackResp&
 MessageData::_Internal::nackresp(const MessageData* msg) {
   return *msg->Body_.nackresp_;
 }
-const ::ErrResp&
-MessageData::_Internal::errresp(const MessageData* msg) {
-  return *msg->Body_.errresp_;
-}
-const ::Suspect&
-MessageData::_Internal::suspect(const MessageData* msg) {
-  return *msg->Body_.suspect_;
-}
-const ::Alive&
-MessageData::_Internal::alive(const MessageData* msg) {
-  return *msg->Body_.alive_;
-}
-const ::Dead&
-MessageData::_Internal::dead(const MessageData* msg) {
-  return *msg->Body_.dead_;
-}
 const ::PushPull&
 MessageData::_Internal::pushpull(const MessageData* msg) {
   return *msg->Body_.pushpull_;
 }
+const ::ComBroadcast&
+MessageData::_Internal::combroadcast(const MessageData* msg) {
+  return *msg->Body_.combroadcast_;
+}
 const ::User&
 MessageData::_Internal::user(const MessageData* msg) {
   return *msg->Body_.user_;
+}
+const ::ErrResp&
+MessageData::_Internal::errresp(const MessageData* msg) {
+  return *msg->Body_.errresp_;
 }
 void MessageData::set_allocated_ping(::Ping* ping) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
@@ -775,66 +835,6 @@ void MessageData::set_allocated_nackresp(::NackResp* nackresp) {
   }
   // @@protoc_insertion_point(field_set_allocated:MessageData.nackresp)
 }
-void MessageData::set_allocated_errresp(::ErrResp* errresp) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_Body();
-  if (errresp) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::ErrResp>::GetOwningArena(errresp);
-    if (message_arena != submessage_arena) {
-      errresp = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, errresp, submessage_arena);
-    }
-    set_has_errresp();
-    Body_.errresp_ = errresp;
-  }
-  // @@protoc_insertion_point(field_set_allocated:MessageData.errresp)
-}
-void MessageData::set_allocated_suspect(::Suspect* suspect) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_Body();
-  if (suspect) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::Suspect>::GetOwningArena(suspect);
-    if (message_arena != submessage_arena) {
-      suspect = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, suspect, submessage_arena);
-    }
-    set_has_suspect();
-    Body_.suspect_ = suspect;
-  }
-  // @@protoc_insertion_point(field_set_allocated:MessageData.suspect)
-}
-void MessageData::set_allocated_alive(::Alive* alive) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_Body();
-  if (alive) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::Alive>::GetOwningArena(alive);
-    if (message_arena != submessage_arena) {
-      alive = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, alive, submessage_arena);
-    }
-    set_has_alive();
-    Body_.alive_ = alive;
-  }
-  // @@protoc_insertion_point(field_set_allocated:MessageData.alive)
-}
-void MessageData::set_allocated_dead(::Dead* dead) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
-  clear_Body();
-  if (dead) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::Dead>::GetOwningArena(dead);
-    if (message_arena != submessage_arena) {
-      dead = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, dead, submessage_arena);
-    }
-    set_has_dead();
-    Body_.dead_ = dead;
-  }
-  // @@protoc_insertion_point(field_set_allocated:MessageData.dead)
-}
 void MessageData::set_allocated_pushpull(::PushPull* pushpull) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   clear_Body();
@@ -850,6 +850,21 @@ void MessageData::set_allocated_pushpull(::PushPull* pushpull) {
   }
   // @@protoc_insertion_point(field_set_allocated:MessageData.pushpull)
 }
+void MessageData::set_allocated_combroadcast(::ComBroadcast* combroadcast) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  clear_Body();
+  if (combroadcast) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::ComBroadcast>::GetOwningArena(combroadcast);
+    if (message_arena != submessage_arena) {
+      combroadcast = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, combroadcast, submessage_arena);
+    }
+    set_has_combroadcast();
+    Body_.combroadcast_ = combroadcast;
+  }
+  // @@protoc_insertion_point(field_set_allocated:MessageData.combroadcast)
+}
 void MessageData::set_allocated_user(::User* user) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
   clear_Body();
@@ -864,6 +879,21 @@ void MessageData::set_allocated_user(::User* user) {
     Body_.user_ = user;
   }
   // @@protoc_insertion_point(field_set_allocated:MessageData.user)
+}
+void MessageData::set_allocated_errresp(::ErrResp* errresp) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  clear_Body();
+  if (errresp) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::ErrResp>::GetOwningArena(errresp);
+    if (message_arena != submessage_arena) {
+      errresp = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, errresp, submessage_arena);
+    }
+    set_has_errresp();
+    Body_.errresp_ = errresp;
+  }
+  // @@protoc_insertion_point(field_set_allocated:MessageData.errresp)
 }
 MessageData::MessageData(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
@@ -896,28 +926,20 @@ MessageData::MessageData(const MessageData& from)
       _internal_mutable_nackresp()->::NackResp::MergeFrom(from._internal_nackresp());
       break;
     }
-    case kErrresp: {
-      _internal_mutable_errresp()->::ErrResp::MergeFrom(from._internal_errresp());
-      break;
-    }
-    case kSuspect: {
-      _internal_mutable_suspect()->::Suspect::MergeFrom(from._internal_suspect());
-      break;
-    }
-    case kAlive: {
-      _internal_mutable_alive()->::Alive::MergeFrom(from._internal_alive());
-      break;
-    }
-    case kDead: {
-      _internal_mutable_dead()->::Dead::MergeFrom(from._internal_dead());
-      break;
-    }
     case kPushpull: {
       _internal_mutable_pushpull()->::PushPull::MergeFrom(from._internal_pushpull());
       break;
     }
+    case kCombroadcast: {
+      _internal_mutable_combroadcast()->::ComBroadcast::MergeFrom(from._internal_combroadcast());
+      break;
+    }
     case kUser: {
       _internal_mutable_user()->::User::MergeFrom(from._internal_user());
+      break;
+    }
+    case kErrresp: {
+      _internal_mutable_errresp()->::ErrResp::MergeFrom(from._internal_errresp());
       break;
     }
     case BODY_NOT_SET: {
@@ -983,39 +1005,27 @@ void MessageData::clear_Body() {
       }
       break;
     }
-    case kErrresp: {
-      if (GetArenaForAllocation() == nullptr) {
-        delete Body_.errresp_;
-      }
-      break;
-    }
-    case kSuspect: {
-      if (GetArenaForAllocation() == nullptr) {
-        delete Body_.suspect_;
-      }
-      break;
-    }
-    case kAlive: {
-      if (GetArenaForAllocation() == nullptr) {
-        delete Body_.alive_;
-      }
-      break;
-    }
-    case kDead: {
-      if (GetArenaForAllocation() == nullptr) {
-        delete Body_.dead_;
-      }
-      break;
-    }
     case kPushpull: {
       if (GetArenaForAllocation() == nullptr) {
         delete Body_.pushpull_;
       }
       break;
     }
+    case kCombroadcast: {
+      if (GetArenaForAllocation() == nullptr) {
+        delete Body_.combroadcast_;
+      }
+      break;
+    }
     case kUser: {
       if (GetArenaForAllocation() == nullptr) {
         delete Body_.user_;
+      }
+      break;
+    }
+    case kErrresp: {
+      if (GetArenaForAllocation() == nullptr) {
+        delete Body_.errresp_;
       }
       break;
     }
@@ -1085,50 +1095,34 @@ const char* MessageData::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
         } else
           goto handle_unusual;
         continue;
-      // .ErrResp errresp = 6;
+      // .PushPull pushpull = 6;
       case 6:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 50)) {
-          ptr = ctx->ParseMessage(_internal_mutable_errresp(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .Suspect suspect = 7;
-      case 7:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
-          ptr = ctx->ParseMessage(_internal_mutable_suspect(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .Alive alive = 8;
-      case 8:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 66)) {
-          ptr = ctx->ParseMessage(_internal_mutable_alive(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .Dead dead = 9;
-      case 9:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 74)) {
-          ptr = ctx->ParseMessage(_internal_mutable_dead(), ptr);
-          CHK_(ptr);
-        } else
-          goto handle_unusual;
-        continue;
-      // .PushPull pushpull = 10;
-      case 10:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 82)) {
           ptr = ctx->ParseMessage(_internal_mutable_pushpull(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
         continue;
-      // .User user = 11;
-      case 11:
-        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 90)) {
+      // .ComBroadcast combroadcast = 7;
+      case 7:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 58)) {
+          ptr = ctx->ParseMessage(_internal_mutable_combroadcast(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .User user = 8;
+      case 8:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 66)) {
           ptr = ctx->ParseMessage(_internal_mutable_user(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .ErrResp errresp = 9;
+      case 9:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 74)) {
+          ptr = ctx->ParseMessage(_internal_mutable_errresp(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -1201,52 +1195,36 @@ uint8_t* MessageData::_InternalSerialize(
         5, _Internal::nackresp(this), target, stream);
   }
 
-  // .ErrResp errresp = 6;
-  if (_internal_has_errresp()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        6, _Internal::errresp(this), target, stream);
-  }
-
-  // .Suspect suspect = 7;
-  if (_internal_has_suspect()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        7, _Internal::suspect(this), target, stream);
-  }
-
-  // .Alive alive = 8;
-  if (_internal_has_alive()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        8, _Internal::alive(this), target, stream);
-  }
-
-  // .Dead dead = 9;
-  if (_internal_has_dead()) {
-    target = stream->EnsureSpace(target);
-    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
-      InternalWriteMessage(
-        9, _Internal::dead(this), target, stream);
-  }
-
-  // .PushPull pushpull = 10;
+  // .PushPull pushpull = 6;
   if (_internal_has_pushpull()) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(
-        10, _Internal::pushpull(this), target, stream);
+        6, _Internal::pushpull(this), target, stream);
   }
 
-  // .User user = 11;
+  // .ComBroadcast combroadcast = 7;
+  if (_internal_has_combroadcast()) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        7, _Internal::combroadcast(this), target, stream);
+  }
+
+  // .User user = 8;
   if (_internal_has_user()) {
     target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessage(
-        11, _Internal::user(this), target, stream);
+        8, _Internal::user(this), target, stream);
+  }
+
+  // .ErrResp errresp = 9;
+  if (_internal_has_errresp()) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        9, _Internal::errresp(this), target, stream);
   }
 
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
@@ -1300,46 +1278,32 @@ size_t MessageData::ByteSizeLong() const {
           *Body_.nackresp_);
       break;
     }
-    // .ErrResp errresp = 6;
-    case kErrresp: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *Body_.errresp_);
-      break;
-    }
-    // .Suspect suspect = 7;
-    case kSuspect: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *Body_.suspect_);
-      break;
-    }
-    // .Alive alive = 8;
-    case kAlive: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *Body_.alive_);
-      break;
-    }
-    // .Dead dead = 9;
-    case kDead: {
-      total_size += 1 +
-        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
-          *Body_.dead_);
-      break;
-    }
-    // .PushPull pushpull = 10;
+    // .PushPull pushpull = 6;
     case kPushpull: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *Body_.pushpull_);
       break;
     }
-    // .User user = 11;
+    // .ComBroadcast combroadcast = 7;
+    case kCombroadcast: {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *Body_.combroadcast_);
+      break;
+    }
+    // .User user = 8;
     case kUser: {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *Body_.user_);
+      break;
+    }
+    // .ErrResp errresp = 9;
+    case kErrresp: {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *Body_.errresp_);
       break;
     }
     case BODY_NOT_SET: {
@@ -1388,28 +1352,20 @@ void MessageData::MergeFrom(const MessageData& from) {
       _internal_mutable_nackresp()->::NackResp::MergeFrom(from._internal_nackresp());
       break;
     }
-    case kErrresp: {
-      _internal_mutable_errresp()->::ErrResp::MergeFrom(from._internal_errresp());
-      break;
-    }
-    case kSuspect: {
-      _internal_mutable_suspect()->::Suspect::MergeFrom(from._internal_suspect());
-      break;
-    }
-    case kAlive: {
-      _internal_mutable_alive()->::Alive::MergeFrom(from._internal_alive());
-      break;
-    }
-    case kDead: {
-      _internal_mutable_dead()->::Dead::MergeFrom(from._internal_dead());
-      break;
-    }
     case kPushpull: {
       _internal_mutable_pushpull()->::PushPull::MergeFrom(from._internal_pushpull());
       break;
     }
+    case kCombroadcast: {
+      _internal_mutable_combroadcast()->::ComBroadcast::MergeFrom(from._internal_combroadcast());
+      break;
+    }
     case kUser: {
       _internal_mutable_user()->::User::MergeFrom(from._internal_user());
+      break;
+    }
+    case kErrresp: {
+      _internal_mutable_errresp()->::ErrResp::MergeFrom(from._internal_errresp());
       break;
     }
     case BODY_NOT_SET: {
@@ -4437,6 +4393,577 @@ void User::InternalSwap(User* other) {
       file_level_metadata_msgtype_2eproto[12]);
 }
 
+// ===================================================================
+
+class ComBroadcast::_Internal {
+ public:
+};
+
+ComBroadcast::ComBroadcast(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned),
+  bs_(arena) {
+  SharedCtor();
+  if (!is_message_owned) {
+    RegisterArenaDtor(arena);
+  }
+  // @@protoc_insertion_point(arena_constructor:ComBroadcast)
+}
+ComBroadcast::ComBroadcast(const ComBroadcast& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      bs_(from.bs_) {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  // @@protoc_insertion_point(copy_constructor:ComBroadcast)
+}
+
+inline void ComBroadcast::SharedCtor() {
+}
+
+ComBroadcast::~ComBroadcast() {
+  // @@protoc_insertion_point(destructor:ComBroadcast)
+  if (GetArenaForAllocation() != nullptr) return;
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+inline void ComBroadcast::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void ComBroadcast::ArenaDtor(void* object) {
+  ComBroadcast* _this = reinterpret_cast< ComBroadcast* >(object);
+  (void)_this;
+}
+void ComBroadcast::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void ComBroadcast::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+
+void ComBroadcast::Clear() {
+// @@protoc_insertion_point(message_clear_start:ComBroadcast)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  bs_.Clear();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* ComBroadcast::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // repeated .Broadcast Bs = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 10)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(_internal_add_bs(), ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<10>(ptr));
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* ComBroadcast::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:ComBroadcast)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // repeated .Broadcast Bs = 1;
+  for (unsigned int i = 0,
+      n = static_cast<unsigned int>(this->_internal_bs_size()); i < n; i++) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(1, this->_internal_bs(i), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:ComBroadcast)
+  return target;
+}
+
+size_t ComBroadcast::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:ComBroadcast)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // repeated .Broadcast Bs = 1;
+  total_size += 1UL * this->_internal_bs_size();
+  for (const auto& msg : this->bs_) {
+    total_size +=
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(msg);
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData ComBroadcast::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    ComBroadcast::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*ComBroadcast::GetClassData() const { return &_class_data_; }
+
+void ComBroadcast::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
+                      const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+  static_cast<ComBroadcast *>(to)->MergeFrom(
+      static_cast<const ComBroadcast &>(from));
+}
+
+
+void ComBroadcast::MergeFrom(const ComBroadcast& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:ComBroadcast)
+  GOOGLE_DCHECK_NE(&from, this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  bs_.MergeFrom(from.bs_);
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void ComBroadcast::CopyFrom(const ComBroadcast& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:ComBroadcast)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool ComBroadcast::IsInitialized() const {
+  return true;
+}
+
+void ComBroadcast::InternalSwap(ComBroadcast* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  bs_.InternalSwap(&other->bs_);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata ComBroadcast::GetMetadata() const {
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_msgtype_2eproto_getter, &descriptor_table_msgtype_2eproto_once,
+      file_level_metadata_msgtype_2eproto[13]);
+}
+
+// ===================================================================
+
+class Broadcast::_Internal {
+ public:
+  static const ::Alive& alive(const Broadcast* msg);
+  static const ::Dead& dead(const Broadcast* msg);
+  static const ::Suspect& suspect(const Broadcast* msg);
+};
+
+const ::Alive&
+Broadcast::_Internal::alive(const Broadcast* msg) {
+  return *msg->Content_.alive_;
+}
+const ::Dead&
+Broadcast::_Internal::dead(const Broadcast* msg) {
+  return *msg->Content_.dead_;
+}
+const ::Suspect&
+Broadcast::_Internal::suspect(const Broadcast* msg) {
+  return *msg->Content_.suspect_;
+}
+void Broadcast::set_allocated_alive(::Alive* alive) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  clear_Content();
+  if (alive) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::Alive>::GetOwningArena(alive);
+    if (message_arena != submessage_arena) {
+      alive = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, alive, submessage_arena);
+    }
+    set_has_alive();
+    Content_.alive_ = alive;
+  }
+  // @@protoc_insertion_point(field_set_allocated:Broadcast.alive)
+}
+void Broadcast::set_allocated_dead(::Dead* dead) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  clear_Content();
+  if (dead) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::Dead>::GetOwningArena(dead);
+    if (message_arena != submessage_arena) {
+      dead = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, dead, submessage_arena);
+    }
+    set_has_dead();
+    Content_.dead_ = dead;
+  }
+  // @@protoc_insertion_point(field_set_allocated:Broadcast.dead)
+}
+void Broadcast::set_allocated_suspect(::Suspect* suspect) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  clear_Content();
+  if (suspect) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper<::Suspect>::GetOwningArena(suspect);
+    if (message_arena != submessage_arena) {
+      suspect = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, suspect, submessage_arena);
+    }
+    set_has_suspect();
+    Content_.suspect_ = suspect;
+  }
+  // @@protoc_insertion_point(field_set_allocated:Broadcast.suspect)
+}
+Broadcast::Broadcast(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor();
+  if (!is_message_owned) {
+    RegisterArenaDtor(arena);
+  }
+  // @@protoc_insertion_point(arena_constructor:Broadcast)
+}
+Broadcast::Broadcast(const Broadcast& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  type_ = from.type_;
+  clear_has_Content();
+  switch (from.Content_case()) {
+    case kAlive: {
+      _internal_mutable_alive()->::Alive::MergeFrom(from._internal_alive());
+      break;
+    }
+    case kDead: {
+      _internal_mutable_dead()->::Dead::MergeFrom(from._internal_dead());
+      break;
+    }
+    case kSuspect: {
+      _internal_mutable_suspect()->::Suspect::MergeFrom(from._internal_suspect());
+      break;
+    }
+    case CONTENT_NOT_SET: {
+      break;
+    }
+  }
+  // @@protoc_insertion_point(copy_constructor:Broadcast)
+}
+
+inline void Broadcast::SharedCtor() {
+type_ = 0;
+clear_has_Content();
+}
+
+Broadcast::~Broadcast() {
+  // @@protoc_insertion_point(destructor:Broadcast)
+  if (GetArenaForAllocation() != nullptr) return;
+  SharedDtor();
+  _internal_metadata_.Delete<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+inline void Broadcast::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+  if (has_Content()) {
+    clear_Content();
+  }
+}
+
+void Broadcast::ArenaDtor(void* object) {
+  Broadcast* _this = reinterpret_cast< Broadcast* >(object);
+  (void)_this;
+}
+void Broadcast::RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena*) {
+}
+void Broadcast::SetCachedSize(int size) const {
+  _cached_size_.Set(size);
+}
+
+void Broadcast::clear_Content() {
+// @@protoc_insertion_point(one_of_clear_start:Broadcast)
+  switch (Content_case()) {
+    case kAlive: {
+      if (GetArenaForAllocation() == nullptr) {
+        delete Content_.alive_;
+      }
+      break;
+    }
+    case kDead: {
+      if (GetArenaForAllocation() == nullptr) {
+        delete Content_.dead_;
+      }
+      break;
+    }
+    case kSuspect: {
+      if (GetArenaForAllocation() == nullptr) {
+        delete Content_.suspect_;
+      }
+      break;
+    }
+    case CONTENT_NOT_SET: {
+      break;
+    }
+  }
+  _oneof_case_[0] = CONTENT_NOT_SET;
+}
+
+
+void Broadcast::Clear() {
+// @@protoc_insertion_point(message_clear_start:Broadcast)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  type_ = 0;
+  clear_Content();
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* Broadcast::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // .Broadcast.BroadcastType Type = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          uint64_t val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+          _internal_set_type(static_cast<::Broadcast_BroadcastType>(val));
+        } else
+          goto handle_unusual;
+        continue;
+      // .Alive alive = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 18)) {
+          ptr = ctx->ParseMessage(_internal_mutable_alive(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .Dead dead = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 26)) {
+          ptr = ctx->ParseMessage(_internal_mutable_dead(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .Suspect suspect = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          ptr = ctx->ParseMessage(_internal_mutable_suspect(), ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* Broadcast::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:Broadcast)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .Broadcast.BroadcastType Type = 1;
+  if (this->_internal_type() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      1, this->_internal_type(), target);
+  }
+
+  // .Alive alive = 2;
+  if (_internal_has_alive()) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        2, _Internal::alive(this), target, stream);
+  }
+
+  // .Dead dead = 3;
+  if (_internal_has_dead()) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        3, _Internal::dead(this), target, stream);
+  }
+
+  // .Suspect suspect = 4;
+  if (_internal_has_suspect()) {
+    target = stream->EnsureSpace(target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(
+        4, _Internal::suspect(this), target, stream);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:Broadcast)
+  return target;
+}
+
+size_t Broadcast::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:Broadcast)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // .Broadcast.BroadcastType Type = 1;
+  if (this->_internal_type() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_type());
+  }
+
+  switch (Content_case()) {
+    // .Alive alive = 2;
+    case kAlive: {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *Content_.alive_);
+      break;
+    }
+    // .Dead dead = 3;
+    case kDead: {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *Content_.dead_);
+      break;
+    }
+    // .Suspect suspect = 4;
+    case kSuspect: {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *Content_.suspect_);
+      break;
+    }
+    case CONTENT_NOT_SET: {
+      break;
+    }
+  }
+  return MaybeComputeUnknownFieldsSize(total_size, &_cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Broadcast::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSizeCheck,
+    Broadcast::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Broadcast::GetClassData() const { return &_class_data_; }
+
+void Broadcast::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to,
+                      const ::PROTOBUF_NAMESPACE_ID::Message& from) {
+  static_cast<Broadcast *>(to)->MergeFrom(
+      static_cast<const Broadcast &>(from));
+}
+
+
+void Broadcast::MergeFrom(const Broadcast& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:Broadcast)
+  GOOGLE_DCHECK_NE(&from, this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_type() != 0) {
+    _internal_set_type(from._internal_type());
+  }
+  switch (from.Content_case()) {
+    case kAlive: {
+      _internal_mutable_alive()->::Alive::MergeFrom(from._internal_alive());
+      break;
+    }
+    case kDead: {
+      _internal_mutable_dead()->::Dead::MergeFrom(from._internal_dead());
+      break;
+    }
+    case kSuspect: {
+      _internal_mutable_suspect()->::Suspect::MergeFrom(from._internal_suspect());
+      break;
+    }
+    case CONTENT_NOT_SET: {
+      break;
+    }
+  }
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void Broadcast::CopyFrom(const Broadcast& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:Broadcast)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Broadcast::IsInitialized() const {
+  return true;
+}
+
+void Broadcast::InternalSwap(Broadcast* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(type_, other->type_);
+  swap(Content_, other->Content_);
+  swap(_oneof_case_[0], other->_oneof_case_[0]);
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata Broadcast::GetMetadata() const {
+  return ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(
+      &descriptor_table_msgtype_2eproto_getter, &descriptor_table_msgtype_2eproto_once,
+      file_level_metadata_msgtype_2eproto[14]);
+}
+
 // @@protoc_insertion_point(namespace_scope)
 PROTOBUF_NAMESPACE_OPEN
 template<> PROTOBUF_NOINLINE ::Compound* Arena::CreateMaybeMessage< ::Compound >(Arena* arena) {
@@ -4477,6 +5004,12 @@ template<> PROTOBUF_NOINLINE ::PushNodeState* Arena::CreateMaybeMessage< ::PushN
 }
 template<> PROTOBUF_NOINLINE ::User* Arena::CreateMaybeMessage< ::User >(Arena* arena) {
   return Arena::CreateMessageInternal< ::User >(arena);
+}
+template<> PROTOBUF_NOINLINE ::ComBroadcast* Arena::CreateMaybeMessage< ::ComBroadcast >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::ComBroadcast >(arena);
+}
+template<> PROTOBUF_NOINLINE ::Broadcast* Arena::CreateMaybeMessage< ::Broadcast >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::Broadcast >(arena);
 }
 PROTOBUF_NAMESPACE_CLOSE
 

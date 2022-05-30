@@ -1,12 +1,15 @@
 #ifndef _WRAPPED_H
 #define _WRAPPED_H
 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/errno.h>
 #include <sys/epoll.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
-#include <sys/types.h>
+#include <fcntl.h>
+#include <glog/logging.h>
 
 int Socket(int domain, int type, int protocol);
 
@@ -15,6 +18,8 @@ void Bind(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len);
 void Listen(int fd, int n);
 
 void Connect(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len);
+
+void ConnectTimeout(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len, uint32_t timeout);
 
 int Accept(int fd, __SOCKADDR_ARG addr, socklen_t *__restrict addr_len);
 
@@ -39,4 +44,5 @@ void Pipe(int *pipedes);
 void Pipe2(int *pipedes,int flags);
 
 int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval* timeout);
+
 #endif

@@ -2,31 +2,32 @@
 #define _CONFIG_H
 
 #include <iostream>
+#include <chrono>
+#include <memory>
 
-using namespace std;
+#include <unistd.h>
 
-//default port for joining to a cluster
-//assume other cluster members listen on this port by default
+// default port for joining to a cluster
+// assume other cluster members listen on this port by default
 #define DEFAULT_PORT 6666
 
-//该 gossip 协议设计涉及两种传输层数据类型，分别为 TCP 和 UDP
-//通过 UDP 发送 Probe 消息探测其他节点的状态
-//通过 UDP 发送 Gossip 消息，传播节点的更新信息
-//通过 TCP 发送 PushPull 消息，交换所有节点的信息
-typedef struct config
+struct Config
 {
     // The name of this node. This must be unique in the cluster.
-    string Name;
+    std::string Name;
 
     // Configuration related to what address to bind to and ports to
 	// listen on. The port is used for both UDP and TCP gossip.
-	string BindAddr;
+	std::string BindAddr;
 	uint16_t BindPort;
+
+	std::string AdvertiseAddr;
+	uint16_t AdvertisePort;
 
 	// TCPTimeout is the timeout for establishing a stream connection with
 	// a remote node for a full state sync, and for stream read and write
 	// operations.
-	uint32_t TCPTimeout;
+	int64_t TCPTimeout;
 
 	// IndirectChecks is the number of nodes that will be asked to perform
 	// an indirect probe of a node in the case a direct probe fails. Memberlist
@@ -86,7 +87,7 @@ typedef struct config
 	// Setting this interval lower (more frequent) will increase convergence
 	// speeds across larger clusters at the expense of increased bandwidth
 	// usage.
-	uint32_t PushPullInterval;
+	int64_t PushPullInterval;
 
 
 	// ProbeInterval and ProbeTimeout are used to configure probing
@@ -99,8 +100,13 @@ typedef struct config
 	// ProbeTimeout is the timeout to wait for an ack from a probed node
 	// before assuming it is unhealthy. This should be set to 99-percentile
 	// of RTT (round-trip time) on your network.
-	uint32_t ProbeInterval;
-	uint32_t ProbeTimeout;
+	int64_t ProbeInterval;
+	int64_t ProbeTimeout;
+
+	// AllowTcpPing will turn on the fallback TCP pings that are attempted
+	// if the direct UDP ping fails. These get pipelined along with the
+	// indirect UDP pings.
+	bool AllowTcpPing;
 
 	// GossipInterval and GossipNodes are used to configure the gossip
 	// behavior of memberlist.
@@ -118,10 +124,28 @@ typedef struct config
 	//
 	// GossipToTheDeadTime is the interval after which a node has died that
 	// we will still try to gossip to it. This gives it a chance to refute.
-	uint32_t GossipInterval;
+	int64_t GossipInterval;
 	uint8_t GossipNodes;
-	uint32_t GossipToTheDeadTime;
+	int64_t GossipToTheDeadTime;
+
+	// Size of Memberlist's internal pipe which handles UDP messages. The
+	// size of this determines the size of the queue which Memberlist will keep
+	// while UDP messages are handled.
+	size_t HandoffQueueDepth;
+
+	// Maximum number of bytes that memberlist will put in a packet (this
+	// will be for UDP packets by default with a NetTransport). A safe value
+	// for this is typically 1400 bytes (which is the default). However,
+	// depending on your network's MTU (Maximum Transmission Unit) you may
+	// be able to increase this to get more content into each gossip packet.
+	// This is a legacy name for backward compatibility but should really be
+	// called PacketBufferSize now that we have generalized the transport.
+	uint16_t UDPBufferSize;
 };
 
+std::shared_ptr<Config> DefaultLANConfig();
+std::shared_ptr<Config> DefaultWANConfig();
+std::shared_ptr<Config> DefaultLocalConfig();
+std::shared_ptr<Config> DebugConfig();
 
 #endif

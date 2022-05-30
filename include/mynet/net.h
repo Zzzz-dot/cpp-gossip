@@ -4,31 +4,22 @@
 #include "wrapped.h"
 
 #include <type/msgtype.pb.h>
-#include <memberlist/memberlist.h>
 
-#include <arpa/inet.h>
-#include <stdio.h>
-#include <chrono>
-#include <stdlib.h>
-#include <unistd.h>
 #include <iostream>
+#include <arpa/inet.h>
 
-using namespace std;
 
-MessageData onReceive(const string &s);
+#define MessageDataOverhead 4
 
-MessageData onReceiveUDP(int fd,sockaddr_in &remote_addr,socklen_t &sin_size);
+MessageData decodeReceiveUDP(int fd, sockaddr_in &remote_addr, socklen_t &sin_size);
 
-void beforeSend(const MessageData &md, string *s);
+MessageData decodeReceiveTCP(int fd);
 
-string beforeSend(const MessageData &md);
+void beforeSend(const MessageData &md, std::string *s);
 
-void sendTCP(const struct sockaddr_in *remote_addr, const void *msg, size_t n);
+std::string beforeSend(const MessageData &md);
 
-void sendUDP(int fd, const struct sockaddr_in *remote_addr, const void *msg, size_t n);
+void encodeSendTCP(int fd, const MessageData &md);
 
-void encodeSendTCP(const struct sockaddr_in *remote_addr, const MessageData &md);
-
-void encodeSendUDP(int fd, const struct sockaddr_in *remote_addr, const MessageData &md);
-
+void encodeSendUDP(int fd, const sockaddr_in *remote_addr, const MessageData &md);
 #endif

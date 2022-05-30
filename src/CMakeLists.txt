@@ -1,16 +1,34 @@
 # TYPE:
 
-# generate library genmsg
-add_library(genmsg type/msgtype.pb.cc type/genmsg.cpp)
+aux_source_directory(type typefile)
 
-# add protobuf dir to the include dir
-target_include_directories(genmsg PRIVATE "/usr/local/include")
+add_library(type ${typefile})
 
-# add protobuf dir to the link dir
-target_link_directories(genmsg PRIVATE "/usr/local/usr")
+target_link_libraries(type protobuf)
 
-# add protobuf linkfile to the link
-target_link_libraries(genmsg "protobuf")
+# MYNET:
+aux_source_directory(mynet mynetfile)
+
+add_library(mynet ${mynetfile})
+
+add_dependencies(mynet type)
+
+target_link_libraries(mynet type)
+
+find_package (glog 0.6.0 REQUIRED)
+
+target_link_libraries (mynet glog::glog)
+
+# MISC:
+aux_source_directory(misc miscfile)
+
+add_library(misc ${miscfile})
+
+add_dependencies(misc mynet type)
+
+target_link_libraries(misc mynet type)
+
+target_link_libraries(misc pthread)
 
 # MEMBERLIST:
 
@@ -18,12 +36,8 @@ aux_source_directory(memberlist memberlistfile)
 
 add_library(memberlist ${memberlistfile})
 
-add_dependencies(memberlist genmsg)
+add_dependencies(memberlist type mynet misc)
 
-target_link_libraries(memberlist genmsg)
+target_link_libraries(memberlist type mynet misc)
 
-#MYNET: 
-
-aux_source_directory(mynet mynetfile)
-
-add_library(mynet ${mynetfile})
+target_link_libraries(memberlist pthread)

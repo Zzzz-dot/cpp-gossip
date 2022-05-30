@@ -47,7 +47,7 @@ struct TableStruct_msgtype_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[13]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[15]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -60,6 +60,12 @@ extern AckRespDefaultTypeInternal _AckResp_default_instance_;
 class Alive;
 struct AliveDefaultTypeInternal;
 extern AliveDefaultTypeInternal _Alive_default_instance_;
+class Broadcast;
+struct BroadcastDefaultTypeInternal;
+extern BroadcastDefaultTypeInternal _Broadcast_default_instance_;
+class ComBroadcast;
+struct ComBroadcastDefaultTypeInternal;
+extern ComBroadcastDefaultTypeInternal _ComBroadcast_default_instance_;
 class Compound;
 struct CompoundDefaultTypeInternal;
 extern CompoundDefaultTypeInternal _Compound_default_instance_;
@@ -96,6 +102,8 @@ extern UserDefaultTypeInternal _User_default_instance_;
 PROTOBUF_NAMESPACE_OPEN
 template<> ::AckResp* Arena::CreateMaybeMessage<::AckResp>(Arena*);
 template<> ::Alive* Arena::CreateMaybeMessage<::Alive>(Arena*);
+template<> ::Broadcast* Arena::CreateMaybeMessage<::Broadcast>(Arena*);
+template<> ::ComBroadcast* Arena::CreateMaybeMessage<::ComBroadcast>(Arena*);
 template<> ::Compound* Arena::CreateMaybeMessage<::Compound>(Arena*);
 template<> ::Dead* Arena::CreateMaybeMessage<::Dead>(Arena*);
 template<> ::ErrResp* Arena::CreateMaybeMessage<::ErrResp>(Arena*);
@@ -113,13 +121,11 @@ enum MessageData_MessageType : int {
   MessageData_MessageType_pingMsg = 0,
   MessageData_MessageType_indirectPingMsg = 1,
   MessageData_MessageType_ackRespMsg = 2,
-  MessageData_MessageType_suspectMsg = 3,
-  MessageData_MessageType_aliveMsg = 4,
-  MessageData_MessageType_deadMsg = 5,
-  MessageData_MessageType_pushPullMsg = 6,
-  MessageData_MessageType_userMsg = 7,
-  MessageData_MessageType_nackRespMsg = 8,
-  MessageData_MessageType_errMsg = 9,
+  MessageData_MessageType_nackRespMsg = 3,
+  MessageData_MessageType_pushPullMsg = 4,
+  MessageData_MessageType_compoundBroad = 5,
+  MessageData_MessageType_userMsg = 6,
+  MessageData_MessageType_errMsg = 7,
   MessageData_MessageType_MessageData_MessageType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
   MessageData_MessageType_MessageData_MessageType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
 };
@@ -168,6 +174,32 @@ inline bool PushNodeState_NodeStateType_Parse(
     ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, PushNodeState_NodeStateType* value) {
   return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<PushNodeState_NodeStateType>(
     PushNodeState_NodeStateType_descriptor(), name, value);
+}
+enum Broadcast_BroadcastType : int {
+  Broadcast_BroadcastType_aliveMsg = 0,
+  Broadcast_BroadcastType_deadMsg = 1,
+  Broadcast_BroadcastType_suspectMsg = 2,
+  Broadcast_BroadcastType_Broadcast_BroadcastType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::min(),
+  Broadcast_BroadcastType_Broadcast_BroadcastType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<int32_t>::max()
+};
+bool Broadcast_BroadcastType_IsValid(int value);
+constexpr Broadcast_BroadcastType Broadcast_BroadcastType_BroadcastType_MIN = Broadcast_BroadcastType_aliveMsg;
+constexpr Broadcast_BroadcastType Broadcast_BroadcastType_BroadcastType_MAX = Broadcast_BroadcastType_suspectMsg;
+constexpr int Broadcast_BroadcastType_BroadcastType_ARRAYSIZE = Broadcast_BroadcastType_BroadcastType_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Broadcast_BroadcastType_descriptor();
+template<typename T>
+inline const std::string& Broadcast_BroadcastType_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, Broadcast_BroadcastType>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function Broadcast_BroadcastType_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    Broadcast_BroadcastType_descriptor(), enum_t_value);
+}
+inline bool Broadcast_BroadcastType_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, Broadcast_BroadcastType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<Broadcast_BroadcastType>(
+    Broadcast_BroadcastType_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -295,7 +327,7 @@ class Compound final :
   enum : int {
     kMdsFieldNumber = 1,
   };
-  // repeated .MessageData mds = 1;
+  // repeated .MessageData Mds = 1;
   int mds_size() const;
   private:
   int _internal_mds_size() const;
@@ -374,12 +406,10 @@ class MessageData final :
     kIndirectping = 3,
     kAckresp = 4,
     kNackresp = 5,
-    kErrresp = 6,
-    kSuspect = 7,
-    kAlive = 8,
-    kDead = 9,
-    kPushpull = 10,
-    kUser = 11,
+    kPushpull = 6,
+    kCombroadcast = 7,
+    kUser = 8,
+    kErrresp = 9,
     BODY_NOT_SET = 0,
   };
 
@@ -466,18 +496,14 @@ class MessageData final :
     MessageData_MessageType_indirectPingMsg;
   static constexpr MessageType ackRespMsg =
     MessageData_MessageType_ackRespMsg;
-  static constexpr MessageType suspectMsg =
-    MessageData_MessageType_suspectMsg;
-  static constexpr MessageType aliveMsg =
-    MessageData_MessageType_aliveMsg;
-  static constexpr MessageType deadMsg =
-    MessageData_MessageType_deadMsg;
-  static constexpr MessageType pushPullMsg =
-    MessageData_MessageType_pushPullMsg;
-  static constexpr MessageType userMsg =
-    MessageData_MessageType_userMsg;
   static constexpr MessageType nackRespMsg =
     MessageData_MessageType_nackRespMsg;
+  static constexpr MessageType pushPullMsg =
+    MessageData_MessageType_pushPullMsg;
+  static constexpr MessageType compoundBroad =
+    MessageData_MessageType_compoundBroad;
+  static constexpr MessageType userMsg =
+    MessageData_MessageType_userMsg;
   static constexpr MessageType errMsg =
     MessageData_MessageType_errMsg;
   static inline bool MessageType_IsValid(int value) {
@@ -513,12 +539,10 @@ class MessageData final :
     kIndirectpingFieldNumber = 3,
     kAckrespFieldNumber = 4,
     kNackrespFieldNumber = 5,
-    kErrrespFieldNumber = 6,
-    kSuspectFieldNumber = 7,
-    kAliveFieldNumber = 8,
-    kDeadFieldNumber = 9,
-    kPushpullFieldNumber = 10,
-    kUserFieldNumber = 11,
+    kPushpullFieldNumber = 6,
+    kCombroadcastFieldNumber = 7,
+    kUserFieldNumber = 8,
+    kErrrespFieldNumber = 9,
   };
   // .MessageData.MessageType Head = 1;
   void clear_head();
@@ -601,79 +625,7 @@ class MessageData final :
       ::NackResp* nackresp);
   ::NackResp* unsafe_arena_release_nackresp();
 
-  // .ErrResp errresp = 6;
-  bool has_errresp() const;
-  private:
-  bool _internal_has_errresp() const;
-  public:
-  void clear_errresp();
-  const ::ErrResp& errresp() const;
-  PROTOBUF_NODISCARD ::ErrResp* release_errresp();
-  ::ErrResp* mutable_errresp();
-  void set_allocated_errresp(::ErrResp* errresp);
-  private:
-  const ::ErrResp& _internal_errresp() const;
-  ::ErrResp* _internal_mutable_errresp();
-  public:
-  void unsafe_arena_set_allocated_errresp(
-      ::ErrResp* errresp);
-  ::ErrResp* unsafe_arena_release_errresp();
-
-  // .Suspect suspect = 7;
-  bool has_suspect() const;
-  private:
-  bool _internal_has_suspect() const;
-  public:
-  void clear_suspect();
-  const ::Suspect& suspect() const;
-  PROTOBUF_NODISCARD ::Suspect* release_suspect();
-  ::Suspect* mutable_suspect();
-  void set_allocated_suspect(::Suspect* suspect);
-  private:
-  const ::Suspect& _internal_suspect() const;
-  ::Suspect* _internal_mutable_suspect();
-  public:
-  void unsafe_arena_set_allocated_suspect(
-      ::Suspect* suspect);
-  ::Suspect* unsafe_arena_release_suspect();
-
-  // .Alive alive = 8;
-  bool has_alive() const;
-  private:
-  bool _internal_has_alive() const;
-  public:
-  void clear_alive();
-  const ::Alive& alive() const;
-  PROTOBUF_NODISCARD ::Alive* release_alive();
-  ::Alive* mutable_alive();
-  void set_allocated_alive(::Alive* alive);
-  private:
-  const ::Alive& _internal_alive() const;
-  ::Alive* _internal_mutable_alive();
-  public:
-  void unsafe_arena_set_allocated_alive(
-      ::Alive* alive);
-  ::Alive* unsafe_arena_release_alive();
-
-  // .Dead dead = 9;
-  bool has_dead() const;
-  private:
-  bool _internal_has_dead() const;
-  public:
-  void clear_dead();
-  const ::Dead& dead() const;
-  PROTOBUF_NODISCARD ::Dead* release_dead();
-  ::Dead* mutable_dead();
-  void set_allocated_dead(::Dead* dead);
-  private:
-  const ::Dead& _internal_dead() const;
-  ::Dead* _internal_mutable_dead();
-  public:
-  void unsafe_arena_set_allocated_dead(
-      ::Dead* dead);
-  ::Dead* unsafe_arena_release_dead();
-
-  // .PushPull pushpull = 10;
+  // .PushPull pushpull = 6;
   bool has_pushpull() const;
   private:
   bool _internal_has_pushpull() const;
@@ -691,7 +643,25 @@ class MessageData final :
       ::PushPull* pushpull);
   ::PushPull* unsafe_arena_release_pushpull();
 
-  // .User user = 11;
+  // .ComBroadcast combroadcast = 7;
+  bool has_combroadcast() const;
+  private:
+  bool _internal_has_combroadcast() const;
+  public:
+  void clear_combroadcast();
+  const ::ComBroadcast& combroadcast() const;
+  PROTOBUF_NODISCARD ::ComBroadcast* release_combroadcast();
+  ::ComBroadcast* mutable_combroadcast();
+  void set_allocated_combroadcast(::ComBroadcast* combroadcast);
+  private:
+  const ::ComBroadcast& _internal_combroadcast() const;
+  ::ComBroadcast* _internal_mutable_combroadcast();
+  public:
+  void unsafe_arena_set_allocated_combroadcast(
+      ::ComBroadcast* combroadcast);
+  ::ComBroadcast* unsafe_arena_release_combroadcast();
+
+  // .User user = 8;
   bool has_user() const;
   private:
   bool _internal_has_user() const;
@@ -709,6 +679,24 @@ class MessageData final :
       ::User* user);
   ::User* unsafe_arena_release_user();
 
+  // .ErrResp errresp = 9;
+  bool has_errresp() const;
+  private:
+  bool _internal_has_errresp() const;
+  public:
+  void clear_errresp();
+  const ::ErrResp& errresp() const;
+  PROTOBUF_NODISCARD ::ErrResp* release_errresp();
+  ::ErrResp* mutable_errresp();
+  void set_allocated_errresp(::ErrResp* errresp);
+  private:
+  const ::ErrResp& _internal_errresp() const;
+  ::ErrResp* _internal_mutable_errresp();
+  public:
+  void unsafe_arena_set_allocated_errresp(
+      ::ErrResp* errresp);
+  ::ErrResp* unsafe_arena_release_errresp();
+
   void clear_Body();
   BodyCase Body_case() const;
   // @@protoc_insertion_point(class_scope:MessageData)
@@ -718,12 +706,10 @@ class MessageData final :
   void set_has_indirectping();
   void set_has_ackresp();
   void set_has_nackresp();
-  void set_has_errresp();
-  void set_has_suspect();
-  void set_has_alive();
-  void set_has_dead();
   void set_has_pushpull();
+  void set_has_combroadcast();
   void set_has_user();
+  void set_has_errresp();
 
   inline bool has_Body() const;
   inline void clear_has_Body();
@@ -739,12 +725,10 @@ class MessageData final :
     ::IndirectPing* indirectping_;
     ::AckResp* ackresp_;
     ::NackResp* nackresp_;
-    ::ErrResp* errresp_;
-    ::Suspect* suspect_;
-    ::Alive* alive_;
-    ::Dead* dead_;
     ::PushPull* pushpull_;
+    ::ComBroadcast* combroadcast_;
     ::User* user_;
+    ::ErrResp* errresp_;
   } Body_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   uint32_t _oneof_case_[1];
@@ -2738,6 +2722,420 @@ class User final :
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_msgtype_2eproto;
 };
+// -------------------------------------------------------------------
+
+class ComBroadcast final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:ComBroadcast) */ {
+ public:
+  inline ComBroadcast() : ComBroadcast(nullptr) {}
+  ~ComBroadcast() override;
+  explicit constexpr ComBroadcast(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  ComBroadcast(const ComBroadcast& from);
+  ComBroadcast(ComBroadcast&& from) noexcept
+    : ComBroadcast() {
+    *this = ::std::move(from);
+  }
+
+  inline ComBroadcast& operator=(const ComBroadcast& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline ComBroadcast& operator=(ComBroadcast&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const ComBroadcast& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const ComBroadcast* internal_default_instance() {
+    return reinterpret_cast<const ComBroadcast*>(
+               &_ComBroadcast_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    13;
+
+  friend void swap(ComBroadcast& a, ComBroadcast& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(ComBroadcast* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(ComBroadcast* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  ComBroadcast* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<ComBroadcast>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const ComBroadcast& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const ComBroadcast& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(ComBroadcast* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "ComBroadcast";
+  }
+  protected:
+  explicit ComBroadcast(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kBsFieldNumber = 1,
+  };
+  // repeated .Broadcast Bs = 1;
+  int bs_size() const;
+  private:
+  int _internal_bs_size() const;
+  public:
+  void clear_bs();
+  ::Broadcast* mutable_bs(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Broadcast >*
+      mutable_bs();
+  private:
+  const ::Broadcast& _internal_bs(int index) const;
+  ::Broadcast* _internal_add_bs();
+  public:
+  const ::Broadcast& bs(int index) const;
+  ::Broadcast* add_bs();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Broadcast >&
+      bs() const;
+
+  // @@protoc_insertion_point(class_scope:ComBroadcast)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Broadcast > bs_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_msgtype_2eproto;
+};
+// -------------------------------------------------------------------
+
+class Broadcast final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:Broadcast) */ {
+ public:
+  inline Broadcast() : Broadcast(nullptr) {}
+  ~Broadcast() override;
+  explicit constexpr Broadcast(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Broadcast(const Broadcast& from);
+  Broadcast(Broadcast&& from) noexcept
+    : Broadcast() {
+    *this = ::std::move(from);
+  }
+
+  inline Broadcast& operator=(const Broadcast& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Broadcast& operator=(Broadcast&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Broadcast& default_instance() {
+    return *internal_default_instance();
+  }
+  enum ContentCase {
+    kAlive = 2,
+    kDead = 3,
+    kSuspect = 4,
+    CONTENT_NOT_SET = 0,
+  };
+
+  static inline const Broadcast* internal_default_instance() {
+    return reinterpret_cast<const Broadcast*>(
+               &_Broadcast_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    14;
+
+  friend void swap(Broadcast& a, Broadcast& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Broadcast* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Broadcast* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Broadcast* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Broadcast>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Broadcast& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom(const Broadcast& from);
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message* to, const ::PROTOBUF_NAMESPACE_ID::Message& from);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Broadcast* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "Broadcast";
+  }
+  protected:
+  explicit Broadcast(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  typedef Broadcast_BroadcastType BroadcastType;
+  static constexpr BroadcastType aliveMsg =
+    Broadcast_BroadcastType_aliveMsg;
+  static constexpr BroadcastType deadMsg =
+    Broadcast_BroadcastType_deadMsg;
+  static constexpr BroadcastType suspectMsg =
+    Broadcast_BroadcastType_suspectMsg;
+  static inline bool BroadcastType_IsValid(int value) {
+    return Broadcast_BroadcastType_IsValid(value);
+  }
+  static constexpr BroadcastType BroadcastType_MIN =
+    Broadcast_BroadcastType_BroadcastType_MIN;
+  static constexpr BroadcastType BroadcastType_MAX =
+    Broadcast_BroadcastType_BroadcastType_MAX;
+  static constexpr int BroadcastType_ARRAYSIZE =
+    Broadcast_BroadcastType_BroadcastType_ARRAYSIZE;
+  static inline const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
+  BroadcastType_descriptor() {
+    return Broadcast_BroadcastType_descriptor();
+  }
+  template<typename T>
+  static inline const std::string& BroadcastType_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, BroadcastType>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function BroadcastType_Name.");
+    return Broadcast_BroadcastType_Name(enum_t_value);
+  }
+  static inline bool BroadcastType_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      BroadcastType* value) {
+    return Broadcast_BroadcastType_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kTypeFieldNumber = 1,
+    kAliveFieldNumber = 2,
+    kDeadFieldNumber = 3,
+    kSuspectFieldNumber = 4,
+  };
+  // .Broadcast.BroadcastType Type = 1;
+  void clear_type();
+  ::Broadcast_BroadcastType type() const;
+  void set_type(::Broadcast_BroadcastType value);
+  private:
+  ::Broadcast_BroadcastType _internal_type() const;
+  void _internal_set_type(::Broadcast_BroadcastType value);
+  public:
+
+  // .Alive alive = 2;
+  bool has_alive() const;
+  private:
+  bool _internal_has_alive() const;
+  public:
+  void clear_alive();
+  const ::Alive& alive() const;
+  PROTOBUF_NODISCARD ::Alive* release_alive();
+  ::Alive* mutable_alive();
+  void set_allocated_alive(::Alive* alive);
+  private:
+  const ::Alive& _internal_alive() const;
+  ::Alive* _internal_mutable_alive();
+  public:
+  void unsafe_arena_set_allocated_alive(
+      ::Alive* alive);
+  ::Alive* unsafe_arena_release_alive();
+
+  // .Dead dead = 3;
+  bool has_dead() const;
+  private:
+  bool _internal_has_dead() const;
+  public:
+  void clear_dead();
+  const ::Dead& dead() const;
+  PROTOBUF_NODISCARD ::Dead* release_dead();
+  ::Dead* mutable_dead();
+  void set_allocated_dead(::Dead* dead);
+  private:
+  const ::Dead& _internal_dead() const;
+  ::Dead* _internal_mutable_dead();
+  public:
+  void unsafe_arena_set_allocated_dead(
+      ::Dead* dead);
+  ::Dead* unsafe_arena_release_dead();
+
+  // .Suspect suspect = 4;
+  bool has_suspect() const;
+  private:
+  bool _internal_has_suspect() const;
+  public:
+  void clear_suspect();
+  const ::Suspect& suspect() const;
+  PROTOBUF_NODISCARD ::Suspect* release_suspect();
+  ::Suspect* mutable_suspect();
+  void set_allocated_suspect(::Suspect* suspect);
+  private:
+  const ::Suspect& _internal_suspect() const;
+  ::Suspect* _internal_mutable_suspect();
+  public:
+  void unsafe_arena_set_allocated_suspect(
+      ::Suspect* suspect);
+  ::Suspect* unsafe_arena_release_suspect();
+
+  void clear_Content();
+  ContentCase Content_case() const;
+  // @@protoc_insertion_point(class_scope:Broadcast)
+ private:
+  class _Internal;
+  void set_has_alive();
+  void set_has_dead();
+  void set_has_suspect();
+
+  inline bool has_Content() const;
+  inline void clear_has_Content();
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  int type_;
+  union ContentUnion {
+    constexpr ContentUnion() : _constinit_{} {}
+      ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized _constinit_;
+    ::Alive* alive_;
+    ::Dead* dead_;
+    ::Suspect* suspect_;
+  } Content_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  uint32_t _oneof_case_[1];
+
+  friend struct ::TableStruct_msgtype_2eproto;
+};
 // ===================================================================
 
 
@@ -2749,7 +3147,7 @@ class User final :
 #endif  // __GNUC__
 // Compound
 
-// repeated .MessageData mds = 1;
+// repeated .MessageData Mds = 1;
 inline int Compound::_internal_mds_size() const {
   return mds_.size();
 }
@@ -2760,19 +3158,19 @@ inline void Compound::clear_mds() {
   mds_.Clear();
 }
 inline ::MessageData* Compound::mutable_mds(int index) {
-  // @@protoc_insertion_point(field_mutable:Compound.mds)
+  // @@protoc_insertion_point(field_mutable:Compound.Mds)
   return mds_.Mutable(index);
 }
 inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::MessageData >*
 Compound::mutable_mds() {
-  // @@protoc_insertion_point(field_mutable_list:Compound.mds)
+  // @@protoc_insertion_point(field_mutable_list:Compound.Mds)
   return &mds_;
 }
 inline const ::MessageData& Compound::_internal_mds(int index) const {
   return mds_.Get(index);
 }
 inline const ::MessageData& Compound::mds(int index) const {
-  // @@protoc_insertion_point(field_get:Compound.mds)
+  // @@protoc_insertion_point(field_get:Compound.Mds)
   return _internal_mds(index);
 }
 inline ::MessageData* Compound::_internal_add_mds() {
@@ -2780,12 +3178,12 @@ inline ::MessageData* Compound::_internal_add_mds() {
 }
 inline ::MessageData* Compound::add_mds() {
   ::MessageData* _add = _internal_add_mds();
-  // @@protoc_insertion_point(field_add:Compound.mds)
+  // @@protoc_insertion_point(field_add:Compound.Mds)
   return _add;
 }
 inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::MessageData >&
 Compound::mds() const {
-  // @@protoc_insertion_point(field_list:Compound.mds)
+  // @@protoc_insertion_point(field_list:Compound.Mds)
   return mds_;
 }
 
@@ -3109,303 +3507,7 @@ inline ::NackResp* MessageData::mutable_nackresp() {
   return _msg;
 }
 
-// .ErrResp errresp = 6;
-inline bool MessageData::_internal_has_errresp() const {
-  return Body_case() == kErrresp;
-}
-inline bool MessageData::has_errresp() const {
-  return _internal_has_errresp();
-}
-inline void MessageData::set_has_errresp() {
-  _oneof_case_[0] = kErrresp;
-}
-inline void MessageData::clear_errresp() {
-  if (_internal_has_errresp()) {
-    if (GetArenaForAllocation() == nullptr) {
-      delete Body_.errresp_;
-    }
-    clear_has_Body();
-  }
-}
-inline ::ErrResp* MessageData::release_errresp() {
-  // @@protoc_insertion_point(field_release:MessageData.errresp)
-  if (_internal_has_errresp()) {
-    clear_has_Body();
-      ::ErrResp* temp = Body_.errresp_;
-    if (GetArenaForAllocation() != nullptr) {
-      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-    }
-    Body_.errresp_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline const ::ErrResp& MessageData::_internal_errresp() const {
-  return _internal_has_errresp()
-      ? *Body_.errresp_
-      : reinterpret_cast< ::ErrResp&>(::_ErrResp_default_instance_);
-}
-inline const ::ErrResp& MessageData::errresp() const {
-  // @@protoc_insertion_point(field_get:MessageData.errresp)
-  return _internal_errresp();
-}
-inline ::ErrResp* MessageData::unsafe_arena_release_errresp() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:MessageData.errresp)
-  if (_internal_has_errresp()) {
-    clear_has_Body();
-    ::ErrResp* temp = Body_.errresp_;
-    Body_.errresp_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline void MessageData::unsafe_arena_set_allocated_errresp(::ErrResp* errresp) {
-  clear_Body();
-  if (errresp) {
-    set_has_errresp();
-    Body_.errresp_ = errresp;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:MessageData.errresp)
-}
-inline ::ErrResp* MessageData::_internal_mutable_errresp() {
-  if (!_internal_has_errresp()) {
-    clear_Body();
-    set_has_errresp();
-    Body_.errresp_ = CreateMaybeMessage< ::ErrResp >(GetArenaForAllocation());
-  }
-  return Body_.errresp_;
-}
-inline ::ErrResp* MessageData::mutable_errresp() {
-  ::ErrResp* _msg = _internal_mutable_errresp();
-  // @@protoc_insertion_point(field_mutable:MessageData.errresp)
-  return _msg;
-}
-
-// .Suspect suspect = 7;
-inline bool MessageData::_internal_has_suspect() const {
-  return Body_case() == kSuspect;
-}
-inline bool MessageData::has_suspect() const {
-  return _internal_has_suspect();
-}
-inline void MessageData::set_has_suspect() {
-  _oneof_case_[0] = kSuspect;
-}
-inline void MessageData::clear_suspect() {
-  if (_internal_has_suspect()) {
-    if (GetArenaForAllocation() == nullptr) {
-      delete Body_.suspect_;
-    }
-    clear_has_Body();
-  }
-}
-inline ::Suspect* MessageData::release_suspect() {
-  // @@protoc_insertion_point(field_release:MessageData.suspect)
-  if (_internal_has_suspect()) {
-    clear_has_Body();
-      ::Suspect* temp = Body_.suspect_;
-    if (GetArenaForAllocation() != nullptr) {
-      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-    }
-    Body_.suspect_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline const ::Suspect& MessageData::_internal_suspect() const {
-  return _internal_has_suspect()
-      ? *Body_.suspect_
-      : reinterpret_cast< ::Suspect&>(::_Suspect_default_instance_);
-}
-inline const ::Suspect& MessageData::suspect() const {
-  // @@protoc_insertion_point(field_get:MessageData.suspect)
-  return _internal_suspect();
-}
-inline ::Suspect* MessageData::unsafe_arena_release_suspect() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:MessageData.suspect)
-  if (_internal_has_suspect()) {
-    clear_has_Body();
-    ::Suspect* temp = Body_.suspect_;
-    Body_.suspect_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline void MessageData::unsafe_arena_set_allocated_suspect(::Suspect* suspect) {
-  clear_Body();
-  if (suspect) {
-    set_has_suspect();
-    Body_.suspect_ = suspect;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:MessageData.suspect)
-}
-inline ::Suspect* MessageData::_internal_mutable_suspect() {
-  if (!_internal_has_suspect()) {
-    clear_Body();
-    set_has_suspect();
-    Body_.suspect_ = CreateMaybeMessage< ::Suspect >(GetArenaForAllocation());
-  }
-  return Body_.suspect_;
-}
-inline ::Suspect* MessageData::mutable_suspect() {
-  ::Suspect* _msg = _internal_mutable_suspect();
-  // @@protoc_insertion_point(field_mutable:MessageData.suspect)
-  return _msg;
-}
-
-// .Alive alive = 8;
-inline bool MessageData::_internal_has_alive() const {
-  return Body_case() == kAlive;
-}
-inline bool MessageData::has_alive() const {
-  return _internal_has_alive();
-}
-inline void MessageData::set_has_alive() {
-  _oneof_case_[0] = kAlive;
-}
-inline void MessageData::clear_alive() {
-  if (_internal_has_alive()) {
-    if (GetArenaForAllocation() == nullptr) {
-      delete Body_.alive_;
-    }
-    clear_has_Body();
-  }
-}
-inline ::Alive* MessageData::release_alive() {
-  // @@protoc_insertion_point(field_release:MessageData.alive)
-  if (_internal_has_alive()) {
-    clear_has_Body();
-      ::Alive* temp = Body_.alive_;
-    if (GetArenaForAllocation() != nullptr) {
-      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-    }
-    Body_.alive_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline const ::Alive& MessageData::_internal_alive() const {
-  return _internal_has_alive()
-      ? *Body_.alive_
-      : reinterpret_cast< ::Alive&>(::_Alive_default_instance_);
-}
-inline const ::Alive& MessageData::alive() const {
-  // @@protoc_insertion_point(field_get:MessageData.alive)
-  return _internal_alive();
-}
-inline ::Alive* MessageData::unsafe_arena_release_alive() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:MessageData.alive)
-  if (_internal_has_alive()) {
-    clear_has_Body();
-    ::Alive* temp = Body_.alive_;
-    Body_.alive_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline void MessageData::unsafe_arena_set_allocated_alive(::Alive* alive) {
-  clear_Body();
-  if (alive) {
-    set_has_alive();
-    Body_.alive_ = alive;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:MessageData.alive)
-}
-inline ::Alive* MessageData::_internal_mutable_alive() {
-  if (!_internal_has_alive()) {
-    clear_Body();
-    set_has_alive();
-    Body_.alive_ = CreateMaybeMessage< ::Alive >(GetArenaForAllocation());
-  }
-  return Body_.alive_;
-}
-inline ::Alive* MessageData::mutable_alive() {
-  ::Alive* _msg = _internal_mutable_alive();
-  // @@protoc_insertion_point(field_mutable:MessageData.alive)
-  return _msg;
-}
-
-// .Dead dead = 9;
-inline bool MessageData::_internal_has_dead() const {
-  return Body_case() == kDead;
-}
-inline bool MessageData::has_dead() const {
-  return _internal_has_dead();
-}
-inline void MessageData::set_has_dead() {
-  _oneof_case_[0] = kDead;
-}
-inline void MessageData::clear_dead() {
-  if (_internal_has_dead()) {
-    if (GetArenaForAllocation() == nullptr) {
-      delete Body_.dead_;
-    }
-    clear_has_Body();
-  }
-}
-inline ::Dead* MessageData::release_dead() {
-  // @@protoc_insertion_point(field_release:MessageData.dead)
-  if (_internal_has_dead()) {
-    clear_has_Body();
-      ::Dead* temp = Body_.dead_;
-    if (GetArenaForAllocation() != nullptr) {
-      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-    }
-    Body_.dead_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline const ::Dead& MessageData::_internal_dead() const {
-  return _internal_has_dead()
-      ? *Body_.dead_
-      : reinterpret_cast< ::Dead&>(::_Dead_default_instance_);
-}
-inline const ::Dead& MessageData::dead() const {
-  // @@protoc_insertion_point(field_get:MessageData.dead)
-  return _internal_dead();
-}
-inline ::Dead* MessageData::unsafe_arena_release_dead() {
-  // @@protoc_insertion_point(field_unsafe_arena_release:MessageData.dead)
-  if (_internal_has_dead()) {
-    clear_has_Body();
-    ::Dead* temp = Body_.dead_;
-    Body_.dead_ = nullptr;
-    return temp;
-  } else {
-    return nullptr;
-  }
-}
-inline void MessageData::unsafe_arena_set_allocated_dead(::Dead* dead) {
-  clear_Body();
-  if (dead) {
-    set_has_dead();
-    Body_.dead_ = dead;
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:MessageData.dead)
-}
-inline ::Dead* MessageData::_internal_mutable_dead() {
-  if (!_internal_has_dead()) {
-    clear_Body();
-    set_has_dead();
-    Body_.dead_ = CreateMaybeMessage< ::Dead >(GetArenaForAllocation());
-  }
-  return Body_.dead_;
-}
-inline ::Dead* MessageData::mutable_dead() {
-  ::Dead* _msg = _internal_mutable_dead();
-  // @@protoc_insertion_point(field_mutable:MessageData.dead)
-  return _msg;
-}
-
-// .PushPull pushpull = 10;
+// .PushPull pushpull = 6;
 inline bool MessageData::_internal_has_pushpull() const {
   return Body_case() == kPushpull;
 }
@@ -3479,7 +3581,81 @@ inline ::PushPull* MessageData::mutable_pushpull() {
   return _msg;
 }
 
-// .User user = 11;
+// .ComBroadcast combroadcast = 7;
+inline bool MessageData::_internal_has_combroadcast() const {
+  return Body_case() == kCombroadcast;
+}
+inline bool MessageData::has_combroadcast() const {
+  return _internal_has_combroadcast();
+}
+inline void MessageData::set_has_combroadcast() {
+  _oneof_case_[0] = kCombroadcast;
+}
+inline void MessageData::clear_combroadcast() {
+  if (_internal_has_combroadcast()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete Body_.combroadcast_;
+    }
+    clear_has_Body();
+  }
+}
+inline ::ComBroadcast* MessageData::release_combroadcast() {
+  // @@protoc_insertion_point(field_release:MessageData.combroadcast)
+  if (_internal_has_combroadcast()) {
+    clear_has_Body();
+      ::ComBroadcast* temp = Body_.combroadcast_;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    Body_.combroadcast_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::ComBroadcast& MessageData::_internal_combroadcast() const {
+  return _internal_has_combroadcast()
+      ? *Body_.combroadcast_
+      : reinterpret_cast< ::ComBroadcast&>(::_ComBroadcast_default_instance_);
+}
+inline const ::ComBroadcast& MessageData::combroadcast() const {
+  // @@protoc_insertion_point(field_get:MessageData.combroadcast)
+  return _internal_combroadcast();
+}
+inline ::ComBroadcast* MessageData::unsafe_arena_release_combroadcast() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:MessageData.combroadcast)
+  if (_internal_has_combroadcast()) {
+    clear_has_Body();
+    ::ComBroadcast* temp = Body_.combroadcast_;
+    Body_.combroadcast_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void MessageData::unsafe_arena_set_allocated_combroadcast(::ComBroadcast* combroadcast) {
+  clear_Body();
+  if (combroadcast) {
+    set_has_combroadcast();
+    Body_.combroadcast_ = combroadcast;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:MessageData.combroadcast)
+}
+inline ::ComBroadcast* MessageData::_internal_mutable_combroadcast() {
+  if (!_internal_has_combroadcast()) {
+    clear_Body();
+    set_has_combroadcast();
+    Body_.combroadcast_ = CreateMaybeMessage< ::ComBroadcast >(GetArenaForAllocation());
+  }
+  return Body_.combroadcast_;
+}
+inline ::ComBroadcast* MessageData::mutable_combroadcast() {
+  ::ComBroadcast* _msg = _internal_mutable_combroadcast();
+  // @@protoc_insertion_point(field_mutable:MessageData.combroadcast)
+  return _msg;
+}
+
+// .User user = 8;
 inline bool MessageData::_internal_has_user() const {
   return Body_case() == kUser;
 }
@@ -3550,6 +3726,80 @@ inline ::User* MessageData::_internal_mutable_user() {
 inline ::User* MessageData::mutable_user() {
   ::User* _msg = _internal_mutable_user();
   // @@protoc_insertion_point(field_mutable:MessageData.user)
+  return _msg;
+}
+
+// .ErrResp errresp = 9;
+inline bool MessageData::_internal_has_errresp() const {
+  return Body_case() == kErrresp;
+}
+inline bool MessageData::has_errresp() const {
+  return _internal_has_errresp();
+}
+inline void MessageData::set_has_errresp() {
+  _oneof_case_[0] = kErrresp;
+}
+inline void MessageData::clear_errresp() {
+  if (_internal_has_errresp()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete Body_.errresp_;
+    }
+    clear_has_Body();
+  }
+}
+inline ::ErrResp* MessageData::release_errresp() {
+  // @@protoc_insertion_point(field_release:MessageData.errresp)
+  if (_internal_has_errresp()) {
+    clear_has_Body();
+      ::ErrResp* temp = Body_.errresp_;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    Body_.errresp_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::ErrResp& MessageData::_internal_errresp() const {
+  return _internal_has_errresp()
+      ? *Body_.errresp_
+      : reinterpret_cast< ::ErrResp&>(::_ErrResp_default_instance_);
+}
+inline const ::ErrResp& MessageData::errresp() const {
+  // @@protoc_insertion_point(field_get:MessageData.errresp)
+  return _internal_errresp();
+}
+inline ::ErrResp* MessageData::unsafe_arena_release_errresp() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:MessageData.errresp)
+  if (_internal_has_errresp()) {
+    clear_has_Body();
+    ::ErrResp* temp = Body_.errresp_;
+    Body_.errresp_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void MessageData::unsafe_arena_set_allocated_errresp(::ErrResp* errresp) {
+  clear_Body();
+  if (errresp) {
+    set_has_errresp();
+    Body_.errresp_ = errresp;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:MessageData.errresp)
+}
+inline ::ErrResp* MessageData::_internal_mutable_errresp() {
+  if (!_internal_has_errresp()) {
+    clear_Body();
+    set_has_errresp();
+    Body_.errresp_ = CreateMaybeMessage< ::ErrResp >(GetArenaForAllocation());
+  }
+  return Body_.errresp_;
+}
+inline ::ErrResp* MessageData::mutable_errresp() {
+  ::ErrResp* _msg = _internal_mutable_errresp();
+  // @@protoc_insertion_point(field_mutable:MessageData.errresp)
   return _msg;
 }
 
@@ -4833,9 +5083,312 @@ inline void User::set_allocated_msg(std::string* msg) {
   // @@protoc_insertion_point(field_set_allocated:User.Msg)
 }
 
+// -------------------------------------------------------------------
+
+// ComBroadcast
+
+// repeated .Broadcast Bs = 1;
+inline int ComBroadcast::_internal_bs_size() const {
+  return bs_.size();
+}
+inline int ComBroadcast::bs_size() const {
+  return _internal_bs_size();
+}
+inline void ComBroadcast::clear_bs() {
+  bs_.Clear();
+}
+inline ::Broadcast* ComBroadcast::mutable_bs(int index) {
+  // @@protoc_insertion_point(field_mutable:ComBroadcast.Bs)
+  return bs_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Broadcast >*
+ComBroadcast::mutable_bs() {
+  // @@protoc_insertion_point(field_mutable_list:ComBroadcast.Bs)
+  return &bs_;
+}
+inline const ::Broadcast& ComBroadcast::_internal_bs(int index) const {
+  return bs_.Get(index);
+}
+inline const ::Broadcast& ComBroadcast::bs(int index) const {
+  // @@protoc_insertion_point(field_get:ComBroadcast.Bs)
+  return _internal_bs(index);
+}
+inline ::Broadcast* ComBroadcast::_internal_add_bs() {
+  return bs_.Add();
+}
+inline ::Broadcast* ComBroadcast::add_bs() {
+  ::Broadcast* _add = _internal_add_bs();
+  // @@protoc_insertion_point(field_add:ComBroadcast.Bs)
+  return _add;
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::Broadcast >&
+ComBroadcast::bs() const {
+  // @@protoc_insertion_point(field_list:ComBroadcast.Bs)
+  return bs_;
+}
+
+// -------------------------------------------------------------------
+
+// Broadcast
+
+// .Broadcast.BroadcastType Type = 1;
+inline void Broadcast::clear_type() {
+  type_ = 0;
+}
+inline ::Broadcast_BroadcastType Broadcast::_internal_type() const {
+  return static_cast< ::Broadcast_BroadcastType >(type_);
+}
+inline ::Broadcast_BroadcastType Broadcast::type() const {
+  // @@protoc_insertion_point(field_get:Broadcast.Type)
+  return _internal_type();
+}
+inline void Broadcast::_internal_set_type(::Broadcast_BroadcastType value) {
+  
+  type_ = value;
+}
+inline void Broadcast::set_type(::Broadcast_BroadcastType value) {
+  _internal_set_type(value);
+  // @@protoc_insertion_point(field_set:Broadcast.Type)
+}
+
+// .Alive alive = 2;
+inline bool Broadcast::_internal_has_alive() const {
+  return Content_case() == kAlive;
+}
+inline bool Broadcast::has_alive() const {
+  return _internal_has_alive();
+}
+inline void Broadcast::set_has_alive() {
+  _oneof_case_[0] = kAlive;
+}
+inline void Broadcast::clear_alive() {
+  if (_internal_has_alive()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete Content_.alive_;
+    }
+    clear_has_Content();
+  }
+}
+inline ::Alive* Broadcast::release_alive() {
+  // @@protoc_insertion_point(field_release:Broadcast.alive)
+  if (_internal_has_alive()) {
+    clear_has_Content();
+      ::Alive* temp = Content_.alive_;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    Content_.alive_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::Alive& Broadcast::_internal_alive() const {
+  return _internal_has_alive()
+      ? *Content_.alive_
+      : reinterpret_cast< ::Alive&>(::_Alive_default_instance_);
+}
+inline const ::Alive& Broadcast::alive() const {
+  // @@protoc_insertion_point(field_get:Broadcast.alive)
+  return _internal_alive();
+}
+inline ::Alive* Broadcast::unsafe_arena_release_alive() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:Broadcast.alive)
+  if (_internal_has_alive()) {
+    clear_has_Content();
+    ::Alive* temp = Content_.alive_;
+    Content_.alive_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void Broadcast::unsafe_arena_set_allocated_alive(::Alive* alive) {
+  clear_Content();
+  if (alive) {
+    set_has_alive();
+    Content_.alive_ = alive;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:Broadcast.alive)
+}
+inline ::Alive* Broadcast::_internal_mutable_alive() {
+  if (!_internal_has_alive()) {
+    clear_Content();
+    set_has_alive();
+    Content_.alive_ = CreateMaybeMessage< ::Alive >(GetArenaForAllocation());
+  }
+  return Content_.alive_;
+}
+inline ::Alive* Broadcast::mutable_alive() {
+  ::Alive* _msg = _internal_mutable_alive();
+  // @@protoc_insertion_point(field_mutable:Broadcast.alive)
+  return _msg;
+}
+
+// .Dead dead = 3;
+inline bool Broadcast::_internal_has_dead() const {
+  return Content_case() == kDead;
+}
+inline bool Broadcast::has_dead() const {
+  return _internal_has_dead();
+}
+inline void Broadcast::set_has_dead() {
+  _oneof_case_[0] = kDead;
+}
+inline void Broadcast::clear_dead() {
+  if (_internal_has_dead()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete Content_.dead_;
+    }
+    clear_has_Content();
+  }
+}
+inline ::Dead* Broadcast::release_dead() {
+  // @@protoc_insertion_point(field_release:Broadcast.dead)
+  if (_internal_has_dead()) {
+    clear_has_Content();
+      ::Dead* temp = Content_.dead_;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    Content_.dead_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::Dead& Broadcast::_internal_dead() const {
+  return _internal_has_dead()
+      ? *Content_.dead_
+      : reinterpret_cast< ::Dead&>(::_Dead_default_instance_);
+}
+inline const ::Dead& Broadcast::dead() const {
+  // @@protoc_insertion_point(field_get:Broadcast.dead)
+  return _internal_dead();
+}
+inline ::Dead* Broadcast::unsafe_arena_release_dead() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:Broadcast.dead)
+  if (_internal_has_dead()) {
+    clear_has_Content();
+    ::Dead* temp = Content_.dead_;
+    Content_.dead_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void Broadcast::unsafe_arena_set_allocated_dead(::Dead* dead) {
+  clear_Content();
+  if (dead) {
+    set_has_dead();
+    Content_.dead_ = dead;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:Broadcast.dead)
+}
+inline ::Dead* Broadcast::_internal_mutable_dead() {
+  if (!_internal_has_dead()) {
+    clear_Content();
+    set_has_dead();
+    Content_.dead_ = CreateMaybeMessage< ::Dead >(GetArenaForAllocation());
+  }
+  return Content_.dead_;
+}
+inline ::Dead* Broadcast::mutable_dead() {
+  ::Dead* _msg = _internal_mutable_dead();
+  // @@protoc_insertion_point(field_mutable:Broadcast.dead)
+  return _msg;
+}
+
+// .Suspect suspect = 4;
+inline bool Broadcast::_internal_has_suspect() const {
+  return Content_case() == kSuspect;
+}
+inline bool Broadcast::has_suspect() const {
+  return _internal_has_suspect();
+}
+inline void Broadcast::set_has_suspect() {
+  _oneof_case_[0] = kSuspect;
+}
+inline void Broadcast::clear_suspect() {
+  if (_internal_has_suspect()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete Content_.suspect_;
+    }
+    clear_has_Content();
+  }
+}
+inline ::Suspect* Broadcast::release_suspect() {
+  // @@protoc_insertion_point(field_release:Broadcast.suspect)
+  if (_internal_has_suspect()) {
+    clear_has_Content();
+      ::Suspect* temp = Content_.suspect_;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    Content_.suspect_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::Suspect& Broadcast::_internal_suspect() const {
+  return _internal_has_suspect()
+      ? *Content_.suspect_
+      : reinterpret_cast< ::Suspect&>(::_Suspect_default_instance_);
+}
+inline const ::Suspect& Broadcast::suspect() const {
+  // @@protoc_insertion_point(field_get:Broadcast.suspect)
+  return _internal_suspect();
+}
+inline ::Suspect* Broadcast::unsafe_arena_release_suspect() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:Broadcast.suspect)
+  if (_internal_has_suspect()) {
+    clear_has_Content();
+    ::Suspect* temp = Content_.suspect_;
+    Content_.suspect_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void Broadcast::unsafe_arena_set_allocated_suspect(::Suspect* suspect) {
+  clear_Content();
+  if (suspect) {
+    set_has_suspect();
+    Content_.suspect_ = suspect;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:Broadcast.suspect)
+}
+inline ::Suspect* Broadcast::_internal_mutable_suspect() {
+  if (!_internal_has_suspect()) {
+    clear_Content();
+    set_has_suspect();
+    Content_.suspect_ = CreateMaybeMessage< ::Suspect >(GetArenaForAllocation());
+  }
+  return Content_.suspect_;
+}
+inline ::Suspect* Broadcast::mutable_suspect() {
+  ::Suspect* _msg = _internal_mutable_suspect();
+  // @@protoc_insertion_point(field_mutable:Broadcast.suspect)
+  return _msg;
+}
+
+inline bool Broadcast::has_Content() const {
+  return Content_case() != CONTENT_NOT_SET;
+}
+inline void Broadcast::clear_has_Content() {
+  _oneof_case_[0] = CONTENT_NOT_SET;
+}
+inline Broadcast::ContentCase Broadcast::Content_case() const {
+  return Broadcast::ContentCase(_oneof_case_[0]);
+}
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
@@ -4875,6 +5428,11 @@ template <> struct is_proto_enum< ::PushNodeState_NodeStateType> : ::std::true_t
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::PushNodeState_NodeStateType>() {
   return ::PushNodeState_NodeStateType_descriptor();
+}
+template <> struct is_proto_enum< ::Broadcast_BroadcastType> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::Broadcast_BroadcastType>() {
+  return ::Broadcast_BroadcastType_descriptor();
 }
 
 PROTOBUF_NAMESPACE_CLOSE

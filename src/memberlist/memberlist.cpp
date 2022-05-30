@@ -1,42 +1,160 @@
 #include <memberlist/memberlist.h>
+
 using namespace std;
 
-void memberlist::newmemberlist(){
+uint32_t memberlist::nextSeqNum()
+{
+    sequenceNum.fetch_add(1);
+    return sequenceNum.load();
+};
+
+uint32_t memberlist::nextIncarnation()
+{
+    incarnation.fetch_add(1);
+    return incarnation.load();
+};
+
+uint32_t memberlist::skipIncarnation(uint32_t offset)
+{
+    incarnation.fetch_add(offset);
+    return incarnation.load();
+};
+
+// setAlive is used to mark this node as being alive. This is the same
+// as if we received an alive notification our own network channel for
+// ourself.
+
+void memberlist::setAlive()
+{
+    auto aliveMsg = genAliveBroadcast(nextIncarnation(), config->Name, config->AdvertiseAddr, config->AdvertisePort);
+    aliveNode(aliveMsg, true, -1);
+}
+
+memberlist::msgHandoff::msgHandoff(const Broadcast &b_, const struct sockaddr_in &from_) : b(b_), from(from_){};
+
+memberlist::memberlist()
+{
+
+    auto config_ = DefaultLANConfig();
+
+    LOG(INFO) << "cpp-gossip v" << PROJECT_VERSION << endl;
+
+    newmemberlist(config_);
+
+    setAlive();
+
+    schedule();
+}
+
+memberlist::memberlist(shared_ptr<Config> config_)
+{
+    LOG(INFO) << "cpp-gossip v" << PROJECT_VERSION << endl;
+
+    newmemberlist(config_);
+
+    setAlive();
+
+    schedule();
+}
+
+memberlist::~memberlist()
+{
+    Leave(1000000);
+    ShutDown();
     clearmemberlist();
+    if (t1.joinable())
+    {
+        t1.join();
+    }
+    if (t2.joinable())
+    {
+        t2.join();
+    }
+    if (t3.joinable())
+    {
+        t3.join();
+    }
+}
+
+// newMemberlist creates the network listeners.
+// Does not schedule execution of background maintenance.
+void memberlist::newmemberlist(shared_ptr<Config> config_)
+{
+    sequenceNum.store(0);
+    incarnation.store(0);
+    numNodes.store(0);
+    pushPullReq.store(0);
+
+    config = config_;
+
+    leave.store(false);
+    shutdown.store(false);
+    Pipe(leaveFd);
+    Pipe(shutdownFd);
 
     // Init local address
     struct sockaddr_in local_addr;
     bzero(&local_addr, sizeof(sockaddr_in));
     local_addr.sin_family = AF_INET;
-    local_addr.sin_port = htons(config.BindPort);
-    if (int e = inet_pton(AF_INET, config.BindAddr.c_str(), &local_addr.sin_addr) <= 0)
+    local_addr.sin_port = htons(config->BindPort);
+    if (int e = inet_pton(AF_INET, config->BindAddr.c_str(), &local_addr.sin_addr) <= 0)
     {
         errno = e;
     }
 
     // Create TCP socket
-    tcpfd = Socket(AF_INET, SOCK_STREAM, 0);
-    Bind(tcpfd, (struct sockaddr *)&local_addr, sizeof(sockaddr));
-    Listen(tcpfd, LISTENNUM);
+    tcpFd = Socket(AF_INET, SOCK_STREAM, 0);
+    Bind(tcpFd, (struct sockaddr *)&local_addr, sizeof(sockaddr));
+    Listen(tcpFd, LISTENNUM);
     // Create UDP socket
-    udpfd = Socket(AF_INET, SOCK_DGRAM, 0);
-    Bind(udpfd, (struct sockaddr *)&local_addr, sizeof(sockaddr));
-    // Create epoll
-    epollfd = Epoll_create(EPOLLSIZE);
+    udpFd = Socket(AF_INET, SOCK_DGRAM, 0);
+    Bind(udpFd, (struct sockaddr *)&local_addr, sizeof(sockaddr));
 
-    // Add the tcpfd and udpfd to the watchlist of epollfd
-    struct epoll_event ev1;
-    ev1.events = EPOLLIN;
-    ev1.data.fd = tcpfd;
-    Epoll_ctl(epollfd, EPOLL_CTL_ADD, tcpfd, &ev1);
-    struct epoll_event ev2;
-    ev2.events = EPOLLIN;
-    ev2.data.fd = udpfd;
-    Epoll_ctl(epollfd, EPOLL_CTL_ADD, udpfd, &ev2);
+    Pipe2(handoffFd, O_DIRECT);
+
+    auto f = bind(&memberlist::EstNumNodes, this);
+    TransmitLimitedQueue = make_shared<broadcastQueue>(config->RetransmitMult, f);
+
+    scheduled = false;
+
+    probeIndex = 0;
+
+    t1 = thread(&memberlist::streamListen, this);
+    t2 = thread(&memberlist::packetListen, this);
+    t3 = thread(&memberlist::packetHandler, this);
 };
 
-void memberlist::clearmemberlist(){
+void memberlist::clearmemberlist()
+{
+    sequenceNum.store(0);
+    incarnation.store(0);
+    numNodes.store(0);
+    pushPullReq.store(0);
 
+    tcpFd = -1;
+    udpFd = -1;
+
+    {
+        lock_guard<mutex> l(msgQueueMutex);
+        Close(handoffFd[0]);
+        Close(handoffFd[1]);
+        highPriorityMsgQueue = stack<msgHandoff>();
+        lowPriorityMsgQueue = stack<msgHandoff>();
+    }
+
+    {
+        lock_guard<mutex> l(nodeMutex);
+        nodes.clear();
+        nodeMap.clear();
+        nodeTimers.clear();
+    }
+
+    probeIndex = 0;
+
+    {
+        lock_guard<mutex> l(ackLock);
+        ackHandlers.clear();
+    }
 }
 
 // Join is used to take an existing Memberlist and attempt to join a cluster
@@ -44,23 +162,160 @@ void memberlist::clearmemberlist(){
 // the Memberlist only contains our own state, so doing this will cause
 // remote node to become aware of the existence of this node, effectively
 // joining the cluster.
-void memberlist::join(const string& cluster_addr){
-    struct sockaddr_in remote_addr=resolveAddr(cluster_addr);
+void memberlist::Join(const string &cluster_addr)
+{
+    sockaddr_in remote_addr = resolveAddr(cluster_addr);
+
+    pushPullNode(remote_addr, true);
 }
 
-memberlist::memberlist():scheduled(false)
+// Leave will broadcast a leave message but will not shutdown the background
+// listeners, meaning the node will continue participating in gossip and state
+// updates.
+//
+// This will block until the leave message is successfully broadcasted to
+// a member of the cluster, if any exist or until a specified timeout
+// is reached.
+//
+// This method is safe to call multiple times, but must not be called
+// after the cluster is already shut down.
+void memberlist::Leave(int64_t timeout)
 {
-    newmemberlist();
+    if (shutdown.load())
+    {
+        LOG(WARNING) << "Leave after Shutdown" << endl;
+    }
 
-    schedule();
+    if (leave.load() == false)
+    {
+        leave.store(true);
+        shared_ptr<nodeState> state;
+        {
+            lock_guard<mutex> l(nodeMutex);
+            if (nodeMap.find(config->Name) == nodeMap.end())
+            {
+                LOG(WARNING) << "memberlist: Leave but we're not in the node map" << endl;
+                return;
+            }
+            else
+            {
+                state = nodeMap[config->Name];
+            }
+        }
+
+        // This dead message is special, because Node and From are the
+        // same. This helps other nodes figure out that a node left
+        // intentionally. When Node equals From, other nodes know for
+        // sure this node is gone.
+
+        auto deadMsg = genDeadBroadcast(state->Incarnation, state->N.Name, state->N.Name);
+
+        deadNode(deadMsg);
+
+        // Block until the broadcast goes out
+        if (anyAlive())
+        {
+            fd_set rset;
+            FD_ZERO(&rset);
+            int maxfd = leaveFd[0];
+            FD_SET(leaveFd[0], &rset);
+            int n;
+            if (timeout > 0)
+            {
+                timeval t;
+                t.tv_usec = timeout;
+                n = Select(maxfd + 1, &rset, nullptr, nullptr, &t);
+            }
+            else
+            {
+                n = Select(maxfd + 1, &rset, nullptr, nullptr, nullptr);
+            }
+            if (FD_ISSET(leaveFd[0], &rset))
+            {
+                char buf[1];
+                Read(leaveFd[0], buf, 1);
+            }
+            else
+            {
+                LOG(ERROR) << "timeout waiting for leave broadcast" << endl;
+            }
+        }
+    }
 }
 
-
-
-memberlist::~memberlist()
+// Shutdown will stop any background maintenance of network activity
+// for this memberlist, causing it to appear "dead". A leave message
+// will not be broadcasted prior, so the cluster being left will have
+// to detect this node's shutdown using probing. If you wish to more
+// gracefully exit the cluster, call Leave prior to shutting down.
+//
+// This method is safe to call multiple times.
+void memberlist::ShutDown()
 {
-    clearmemberlist();
+    lock_guard<mutex> l(nodeMutex);
+    if (shutdown.load())
+    {
+        return;
+    }
 
+    Close(tcpFd);
+
+    shutdown.store(true);
+
+    Close(shutdownFd[1]);
+
+    deschedule();
+}
+
+// UpdateNode is used to trigger re-advertising the local node. This is
+// primarily used with a Delegate to support dynamic updates to the local
+// meta data.  This will block until the update message is successfully
+// broadcasted to a member of the cluster, if any exist or until a specified
+// timeout is reached.
+void memberlist::UpdateNode(int64_t timeout)
+{
+    shared_ptr<nodeState> state;
+
+    // Get the existing node
+    {
+        lock_guard<mutex> l(nodeMutex);
+        state = nodeMap[config->Name];
+    }
+
+    auto aliveMsg = genAliveBroadcast(nextIncarnation(), config->Name, state->N.Addr, state->N.Port);
+
+    int notifyFd[2];
+    Pipe(notifyFd);
+
+    aliveNode(aliveMsg, false, notifyFd[1]);
+
+    if (anyAlive())
+    {
+        fd_set rset;
+        FD_ZERO(&rset);
+        int maxfd = notifyFd[0];
+        FD_SET(notifyFd[0], &rset);
+        int n;
+        if (timeout > 0)
+        {
+            timeval t;
+            t.tv_usec = timeout;
+            n = Select(maxfd + 1, &rset, nullptr, nullptr, &t);
+        }
+        else
+        {
+            n = Select(maxfd + 1, &rset, nullptr, nullptr, nullptr);
+        }
+        if (FD_ISSET(notifyFd[0], &rset))
+        {
+            char buf[1];
+            Read(notifyFd[0], buf, 1);
+        }
+        else
+        {
+            LOG(ERROR) << "timeout waiting for update broadcast" << endl;
+        }
+    }
 }
 
 // Schedule is used to ensure the timer is performed periodically. This
@@ -68,6 +323,7 @@ memberlist::~memberlist()
 // scheduled, then it won't do anything.
 void memberlist::schedule()
 {
+    lock_guard<mutex> l(tickerLock);
     if (scheduled)
         return;
     else
@@ -76,21 +332,25 @@ void memberlist::schedule()
     // probe,pushpull,gossip这几个函数可能需要转换成公有
 
     // Probe
-    if (config.ProbeInterval > 0)
+    if (config->ProbeInterval > 0)
     {
-        schedule_timer[0] = unique_ptr<timer>(new timer(config.ProbeInterval, bind(&memberlist::probe, this), this));
+        schedule_timer[0] = unique_ptr<repeatTimer>(new repeatTimer(config->ProbeInterval, bind(&memberlist::probe, this), nullptr));
+        schedule_timer[0]->Run();
     }
 
     // PushPull
-    if (config.PushPullInterval > 0)
+    if (config->PushPullInterval > 0)
     {
-        schedule_timer[1] = unique_ptr<timer>(new timer(config.ProbeInterval, bind(&memberlist::pushpull, this), this, true));
+        auto f = bind(&memberlist::EstNumNodes, this);
+        schedule_timer[1] = unique_ptr<repeatTimer>(new repeatTimer(config->PushPullInterval, bind(&memberlist::pushPull, this), f, true));
+        schedule_timer[1]->Run();
     }
 
     // Gossip
-    if (config.GossipInterval > 0)
+    if (config->GossipInterval > 0)
     {
-        schedule_timer[2] = unique_ptr<timer>(new timer(config.ProbeInterval, bind(&memberlist::gossip, this), this));
+        schedule_timer[2] = unique_ptr<repeatTimer>(new repeatTimer(config->GossipInterval, bind(&memberlist::gossip, this), nullptr));
+        schedule_timer[2]->Run();
     }
 }
 
@@ -98,6 +358,7 @@ void memberlist::schedule()
 // to call multiple times.
 void memberlist::deschedule()
 {
+    lock_guard<mutex> l(tickerLock);
     if (!scheduled)
         return;
     else
@@ -108,191 +369,86 @@ void memberlist::deschedule()
     schedule_timer[2].release();
 }
 
-// Perform a single round of failure detection and gossip
-void memberlist::probe()
+bool memberlist::anyAlive()
 {
-    size_t numCheck = 0;
-START:
+    lock_guard<mutex> l(nodeMutex);
+    for (size_t i = 0; i < nodes.size(); i++)
     {
-        unique_lock<mutex> l(nodeMutex);
-        // Make sure we don't wrap around infinitely
-        if (numCheck >= nodes.size())
+        if (!nodes[i]->DeadOrLeft() && nodes[i]->N.Name != config->Name)
         {
-            l.unlock();
-            return;
+            return true;
         }
-
-        // Handle the wrap around case
-	    if (probeIndex >= nodes.size()) {
-            random_shuffle(nodes.begin(),nodes.end());
-		    l.unlock();
-		    probeIndex = 0;
-		    numCheck++;
-		    goto START;
-	    }
-
-        // Determine if we should probe this node
-	    bool skip = false;
-	    NodeState node; 
-
-	    node = *nodes[probeIndex];
-        l.unlock();
-	    if (node.N.Name == config.Name) {
-		    skip = true;
-	    } else if (node.DeadOrLeft()) {
-		    skip = true;
-	    }
-
-	    // Potentially skip
-	    probeIndex++;
-	    if (skip) {
-		    numCheck++;
-		    goto START;
-	    }
-        // Probe the specific node
-	    probenode(node);
     }
+    return false;
 }
 
-// Send a ping request to the target node and wait for reply
-void memberlist::probenode(NodeState &node)
+// LocalNode is used to return the local Node
+Node *memberlist::LocalNode()
 {
-    uint32_t seqno=nextSeqNum();
-    auto ping=genPing(seqno,node.N.Name,config.BindAddr,config.BindPort,config.Name);
-
-    //匿名管道
-    //Empty Msg can be sent to nackfd, but not ackfd
-    int ackfd[2];
-    Pipe2(ackfd,O_DIRECT);
-    int nackfd[2];
-    Pipe(nackfd);
-
-    //Set Probe Pipes
-    setprobepipes(seqno,ackfd[1],nackfd[1],config.ProbeInterval);
-
-    struct sockaddr_in addr=node.N.FullAddr();
-
-    int64_t sendtime=chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
-
-    int64_t deadline=sendtime+config.ProbeInterval;
-
-    if (node.State==StateAlive){
-        encodeSendUDP(udpfd,&addr,ping);
-    }
-    //Else, this is a suspected node
-    else{
-        //This two messages con be composed into one compound message, but currently our implementation doesn't support compound message yet 
-        encodeSendUDP(udpfd,&addr,ping);
-        auto suspect=genSuspect(node.Incarnation,node.N.Name,config.Name);
-        encodeSendUDP(udpfd,&addr,suspect);
-    }
-
-    fd_set rset;
-    FD_ZERO(&rset);
-    FD_SET(ackfd[0],&rset);
-    struct timeval probetimeout;
-    probetimeout.tv_usec=config.ProbeTimeout;
-
-    Select(ackfd[0]+1,&rset,nullptr,nullptr,&probetimeout);
-    if(FD_ISSET(ackfd[0],&rset)){
-        ackMessage ackmsg;
-        Read(ackfd[0],(void *)&ackmsg,sizeof(ackMessage));
-        if(ackmsg.Complete==true){
-            return;
-        }
-        //Some corner case when akcmsg.Complete==false
-        else{
-            Write(ackfd[1],(void *)&ackmsg,sizeof(ackMessage));
-        }
-    }
-    //Probe Timeout
-    else{
-        #ifdef DEBUG
-        logger<<"[DEBUG] memberlist: Failed UDP ping: "<<node.N.Name<<" (timeout reached)"<<endl;
-        #endif
-    }
-
-    //IndirectProbe If True Ack is not received after ProbeTimeout
-    vector<NodeState> kNodes;
-    {
-        lock_guard<mutex> l(nodeMutex);
-        kNodes=kRandomNodes(config.IndirectChecks,[this](NodeState *n)->bool{
-            return n->N.Name==this->config.Name||n->State!=StateAlive;
-        });
-    }
-
-    auto indirectping=genIndirectPing(seqno,node.N.Name,node.N.Addr,node.N.Port,true,config.BindAddr,config.BindPort,config.Name);
-    for(size_t i=0;i<kNodes.size();i++){
-        struct sockaddr_in addr=kNodes[i].N.FullAddr();
-        encodeSendUDP(udpfd,&addr,indirectping);
-    }
-
-    //TCP ping
-
-    //Wait for IndirectPing
-    ackMessage ackmsg;
-    Read(ackfd[0],(void *)&ackmsg,sizeof(ackMessage));
-    if(ackmsg.Complete==true){
-        return;
-    }
-
-    //This node may fail, gossip suspect
-    logger<<"[INFO] memberlist: Suspect "<<node.N.Name<<" has failed, no acks received!"<<endl;
-    auto suspect=genSuspect(node.Incarnation,node.N.Name,config.Name);
-    //suspectnode(node);
+    lock_guard<mutex> l(nodeMutex);
+    return &nodeMap[config->Name]->N;
 }
 
-// setprobepipes is used to attach the ackpipe to receive a message when an ack
-// with a given sequence number is received.
-void memberlist::setprobepipes(uint32_t seqno,int ackpipe,int nackpipe,uint32_t probeinterval){
-    //onRceive Ack Resp
-    auto ackFn=[ackpipe](int64_t timestamp){
-        ackMessage ackmsg(true,timestamp);
-        Write(ackpipe,(void *)&ackmsg,sizeof(ackMessage));
-    };
-
-    //onReceive Nack Resp
-    auto nackFn=[nackpipe](){
-        Write(nackpipe,nullptr,0);
-    };
-
-    //Callback functino after prointerval, this timer is invoked only when the Ack expired
-    auto f=[this,seqno,ackpipe]{
+// Members returns a list of all known live nodes. The node structures
+// returned must not be modified. If you wish to modify a Node, make a
+// copy first.
+vector<Node *> memberlist::Members()
+{
+    lock_guard<mutex> l(nodeMutex);
+    vector<Node *> v;
+    for (size_t i = 0; i < nodes.size(); i++)
+    {
+        if (!nodes[i]->DeadOrLeft())
         {
-            lock_guard<mutex> l(this->AckLock);
-            this->AckHandlers.erase(seqno);
+            v.push_back(&nodes[i]->N);
         }
-        int64_t now=chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
-        ackMessage ackmsg(false,now);
-        Write(ackpipe,(void *)&ackmsg,sizeof(ackMessage));
-    };
-
-    //Add AckHandlers
-    {
-        timer t=timer(probeinterval,f,this);
-        lock_guard<mutex> l(AckLock);
-        AckHandlers.emplace(seqno,AckHandler(ackFn,nackFn,t));
     }
-    //Start timer
-    AckHandlers[seqno].t.Run();
+    return v;
 }
 
-
-vector<NodeState> memberlist::kRandomNodes(uint8_t k,function<bool(NodeState *n)> exclude){
-    size_t n=nodes.size();
-    vector<NodeState> kNodes;
-    for (int i=0;i<3*n&&kNodes.size()<k;i++){
-        int idx=rand()/RAND_MAX*n;
-        if(exclude!=NULL&&exclude(nodes[idx])){
-            continue;
+// NumMembers returns the number of alive nodes currently known. Between
+// the time of calling this and calling Members, the number of alive nodes
+// may have changed, so this shouldn't be used to determine how many
+// members will be returned by Members.
+size_t memberlist::NumMembers()
+{
+    lock_guard<mutex> l(nodeMutex);
+    size_t alive = 0;
+    for (size_t i = 0; i < nodes.size(); i++)
+    {
+        if (!nodes[i]->DeadOrLeft())
+        {
+            alive++;
         }
-
-        for(int j=0;j<kNodes.size();j++){
-            if(nodes[idx]->N.Name==kNodes[j].N.Name){
-                continue;
-            }
-        }
-        kNodes.push_back(*nodes[idx]);
     }
-    return kNodes;
+    return alive;
+}
+
+uint32_t memberlist::EstNumNodes()
+{
+    return numNodes.load();
+}
+
+// SendBestEffort uses the unreliable packet-oriented interface of the transport
+// to target a user message at the given node (this does not use the gossip
+// mechanism). The maximum size of the message depends on the configured
+// UDPBufferSize for this memberlist instance.
+void memberlist::SendBestEffort(shared_ptr<Node> to, string msg)
+{
+    auto user = genUser(msg);
+    sockaddr_in a = to->FullAddr();
+    encodeSendUDP(udpFd, &a, user);
+}
+
+// SendReliable uses the reliable stream-oriented interface of the transport to
+// target a user message at the given node (this does not use the gossip
+// mechanism). Delivery is guaranteed if no error is returned, and there is no
+// limit on the size of the message.
+void memberlist::SendReliable(shared_ptr<Node> to, string msg)
+{
+    auto user = genUser(msg);
+    sockaddr_in a = to->FullAddr();
+    int fd = Socket(AF_INET, SOCK_STREAM, 0);
+    ConnectTimeout(fd, (struct sockaddr *)&a, sizeof(sockaddr), config->TCPTimeout);
+    encodeSendTCP(fd, user);
 }

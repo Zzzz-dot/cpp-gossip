@@ -5,6 +5,13 @@
 #include <iostream>
 using namespace std;
 
+void addMessage(Compound &cd, MessageData md_)
+{
+    auto mds = cd.mutable_mds();
+    MessageData *md = mds->Add();
+    *md = md_;
+}
+
 MessageData genPing(uint32_t seqno, const string &node, const string &sourceaddr, uint32_t sourceport, const string &sourcenode)
 {
     MessageData md;
@@ -61,65 +68,123 @@ MessageData genErrResp(const string &error)
     return md;
 }
 
-MessageData genSuspect(uint32_t incarnation, const string &node, const string &from)
-{
+MessageData genUser(const string &msg){
     MessageData md;
-    md.set_head(MessageData_MessageType::MessageData_MessageType_suspectMsg);
-    Suspect *p = md.mutable_suspect();
+    md.set_head(MessageData_MessageType::MessageData_MessageType_userMsg);
+    User *p = md.mutable_user();
+    p->set_msg(msg);
+    return md;
+}
+
+MessageData genComMsg(ComBroadcast &cbc){
+    MessageData md;
+    md.set_head(MessageData_MessageType::MessageData_MessageType_compoundBroad);
+    ComBroadcast *p=md.mutable_combroadcast();
+    *p=cbc;
+    return md;
+}
+
+MessageData genSuspectMsg(uint32_t incarnation,const string &node,const string &from){
+    ComBroadcast cbc;
+    Broadcast bc=genSuspectBroadcast(incarnation,node,from);
+    addBroadCast(cbc,bc);
+    MessageData md=genComMsg(cbc);
+    return md;
+}
+MessageData genSuspectMsg(const Suspect &s){
+    ComBroadcast cbc;
+    Broadcast bc=genSuspectBroadcast(s);
+    addBroadCast(cbc,bc);
+    MessageData md=genComMsg(cbc);
+    return md;
+}
+
+MessageData genDeadMsg(uint32_t incarnation,const string &node,const string &from){
+    ComBroadcast cbc;
+    Broadcast bc=genDeadBroadcast(incarnation,node,from);
+    addBroadCast(cbc,bc);
+    MessageData md=genComMsg(cbc);
+    return md;
+}
+MessageData genDeadMsg(const Dead &d){
+    ComBroadcast cbc;
+    Broadcast bc=genDeadBroadcast(d);
+    addBroadCast(cbc,bc);
+    MessageData md=genComMsg(cbc);
+    return md;
+}
+
+MessageData genAliveMsg(uint32_t incarnation,const string &node,const string &addr,uint32_t port){
+    ComBroadcast cbc;
+    Broadcast bc=genAliveBroadcast(incarnation,node,addr,port);
+    addBroadCast(cbc,bc);
+    MessageData md=genComMsg(cbc);
+    return md;
+}
+MessageData genAliveMsg(const Alive &a){
+    ComBroadcast cbc;
+    Broadcast bc=genAliveBroadcast(a);
+    addBroadCast(cbc,bc);
+    MessageData md=genComMsg(cbc);
+    return md;
+}
+
+Broadcast genSuspectBroadcast(uint32_t incarnation, const string &node, const string &from)
+{
+    Broadcast bc;
+    bc.set_type(Broadcast_BroadcastType_suspectMsg);
+    Suspect *p = bc.mutable_suspect();
     p->set_incarnation(incarnation);
     p->set_node(node);
     p->set_from(from);
-    return md;
+    return bc;
 }
-
-MessageData genSuspect(const Suspect &s)
+Broadcast genSuspectBroadcast(const Suspect &s)
 {
-    MessageData md;
-    md.set_head(MessageData_MessageType::MessageData_MessageType_suspectMsg);
-    Suspect *p = md.mutable_suspect();
+    Broadcast bc;
+    bc.set_type(Broadcast_BroadcastType_suspectMsg);
+    Suspect *p = bc.mutable_suspect();
     *p=s;
-    return md;
+    return bc;
 }
 
-MessageData genAlive(uint32_t incarnation, const string &node, const string &addr, uint32_t port)
+Broadcast genAliveBroadcast(uint32_t incarnation, const string &node, const string &addr, uint32_t port)
 {
-    MessageData md;
-    md.set_head(MessageData_MessageType::MessageData_MessageType_aliveMsg);
-    Alive *p = md.mutable_alive();
+    Broadcast bc;
+    bc.set_type(Broadcast_BroadcastType_aliveMsg);
+    Alive *p = bc.mutable_alive();
     p->set_incarnation(incarnation);
     p->set_node(node);
     p->set_addr(addr);
     p->set_port(port);
-    return md;
+    return bc;
 }
-
-MessageData genAlive(const Alive &a)
+Broadcast genAliveBroadcast(const Alive &a)
 {
-    MessageData md;
-    md.set_head(MessageData_MessageType::MessageData_MessageType_aliveMsg);
-    Alive *p = md.mutable_alive();
+    Broadcast bc;
+    bc.set_type(Broadcast_BroadcastType_aliveMsg);
+    Alive *p = bc.mutable_alive();
     *p=a;
-    return md;
+    return bc;
 }
 
-MessageData genDead(uint32_t incarnation, const string &node, const string &from)
+Broadcast genDeadBroadcast(uint32_t incarnation, const string &node, const string &from)
 {
-    MessageData md;
-    md.set_head(MessageData_MessageType::MessageData_MessageType_deadMsg);
-    Dead *p = md.mutable_dead();
+    Broadcast bc;
+    bc.set_type(Broadcast_BroadcastType_deadMsg);
+    Dead *p = bc.mutable_dead();
     p->set_incarnation(incarnation);
     p->set_node(node);
     p->set_from(from);
-    return md;
+    return bc;
 }
-
-MessageData genDead(const Dead &d)
+Broadcast genDeadBroadcast(const Dead &d)
 {
-    MessageData md;
-    md.set_head(MessageData_MessageType::MessageData_MessageType_deadMsg);
-    Dead *p = md.mutable_dead();
+    Broadcast bc;
+    bc.set_type(Broadcast_BroadcastType_deadMsg);
+    Dead *p = bc.mutable_dead();
     *p=d;
-    return md;
+    return bc;
 }
 
 MessageData genPushPull(bool join)
@@ -171,15 +236,8 @@ Dead getDead(uint32_t incarnation, const string &node, const string &from)
     return d;
 }
 
-Compound genCompound()
-{
-    Compound cd;
-    return cd;
-}
-
-void addMessage(Compound &cd, MessageData md_)
-{
-    auto mds = cd.mutable_mds();
-    MessageData *md = mds->Add();
-    *md = md_;
+void addBroadCast(ComBroadcast &cbc, Broadcast bc_){
+    auto bs=cbc.mutable_bs();
+    Broadcast *bc=bs->Add();
+    *bc=bc_;
 }

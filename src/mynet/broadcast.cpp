@@ -1,30 +1,28 @@
 #include <mynet/broadcast.h>
-#include <memberlist/memberlist.h>
 
-// encodeAndBroadcast encodes a message and enqueues it for broadcast. Fails
-// silently if there is an encoding error.
-void memberlist::encodeAndBroadcast(string node, const Compound &cd) {
-    encodeBroadcastNotify(node,cd,NULL);
-}
+using namespace std;
 
-// encodeBroadcastNotify encodes a message and enqueues it for broadcast
-// and notifies the given channel when transmission is finished. Fails
-// silently if there is an encoding error.
-void memberlist::encodeBroadcastNotify(string node, const Compound &cd,int notifyfd){
-    string msg=cd.SerializeAsString();
-    if (msg.empty())
+memberlistBroadcast::memberlistBroadcast(const memberlistBroadcast &b) : node(b.node), msg(b.msg), notifyFd(b.notifyFd){};
+memberlistBroadcast::memberlistBroadcast(const string &node_, const Broadcast &msg_, int notifyFd_) : node(node_), msg(msg_), notifyFd(notifyFd_){};
+
+bool memberlistBroadcast::Invaidate(const memberlistBroadcast &m) const
+{
+    return node == m.node;
+};
+
+void memberlistBroadcast::Finished() const
+{
+    if (notifyFd != -1)
     {
-        cout << "SerializeAsString Error!" << endl;
+        Close(notifyFd);
     }
+};
 
-    memberlistBroadcast b(node,msg,notifyfd);
+Broadcast memberlistBroadcast::Message() const
+{
+    return msg;
+};
 
-    TransmitLimitedQueue.QueueBroadcast(b);
-}
-
-// getBroadcasts is used to return a slice of broadcasts to send up to
-// a maximum byte size, while imposing a per-broadcast overhead. This is used
-// to fill a UDP packet with piggybacked data
-string memberlist::getBroadcasts(size_t overhead, size_t limit){
-    return TransmitLimitedQueue.GetBroadcasts(overhead,limit);
+string memberlistBroadcast::Name() const{
+    return node;
 }

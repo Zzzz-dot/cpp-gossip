@@ -6,40 +6,50 @@
 
 #include <iostream>
 
-using namespace std;
+void addMessage(Compound &cd, MessageData md_);
 
-MessageData genPing(uint32_t seqno,const string &node,const string &sourceaddr,uint32_t sourceport,const string &sourcenode);
+MessageData genPing(uint32_t seqno,const std::string &node,const std::string &sourceaddr,uint32_t sourceport,const std::string &sourcenode);
 
-MessageData genIndirectPing(uint32_t seqno,const string &node,const string &targetaddr,uint32_t targetport,bool nack,const string &sourceaddr,uint32_t sourceport,const string &sourcenode);
+MessageData genIndirectPing(uint32_t seqno,const std::string &node,const std::string &targetaddr,uint32_t targetport,bool nack,const std::string &sourceaddr,uint32_t sourceport,const std::string &sourcenode);
 
 MessageData genAckResp(uint32_t seqno);
 
 MessageData genNackResp(uint32_t seqno);
 
-MessageData genErrResp(const string &error);
-
-MessageData genSuspect(uint32_t incarnation,const string &node,const string &from);
-MessageData genSuspect(const Suspect &s);
-
-MessageData genAlive(uint32_t incarnation,const string &node,const string &addr,uint32_t port);
-MessageData genAlive(const Alive &a);
-
-MessageData genDead(uint32_t incarnation,const string &node,const string &from);
-MessageData genDead(const Dead &d);
-
 MessageData genPushPull(bool join);
+void addPushNodeState(MessageData &md,const std::string& name,const std::string& addr,uint32_t port,uint32_t incarnation,PushNodeState::NodeStateType state);
 
-void addPushNodeState(MessageData &md,const string& name,const string& addr,uint32_t port,uint32_t incarnation,PushNodeState::NodeStateType state);
+MessageData genErrResp(const std::string &error);
 
-Suspect getSuspect(uint32_t incarnation,const string &node,const string &from);
+MessageData genUser(const std::string &msg);
 
-Alive getAlive(uint32_t incarnation,const string &node,const string &addr,uint32_t port);
+MessageData genComMsg(ComBroadcast &cbc);
 
-Dead getDead(uint32_t incarnation,const string &node,const string &from);
+MessageData genSuspectMsg(uint32_t incarnation,const std::string &node,const std::string &from);
+MessageData genSuspectMsg(const Suspect &s);
 
-Compound genCompound();
+MessageData genDeadMsg(uint32_t incarnation,const std::string &node,const std::string &from);
+MessageData genDeadMsg(const Dead &d);
 
-void addMessage(Compound &cd, MessageData md_);
+MessageData genAliveMsg(uint32_t incarnation,const std::string &node,const std::string &addr,uint32_t port);
+MessageData genAliveMsg(const Alive &a);
+
+Suspect getSuspect(uint32_t incarnation,const std::string &node,const std::string &from);
+
+Alive getAlive(uint32_t incarnation,const std::string &node,const std::string &addr,uint32_t port);
+
+Dead getDead(uint32_t incarnation,const std::string &node,const std::string &from);
+
+Broadcast genSuspectBroadcast(uint32_t incarnation,const std::string &node,const std::string &from);
+Broadcast genSuspectBroadcast(const Suspect &s);
+
+Broadcast genAliveBroadcast(uint32_t incarnation,const std::string &node,const std::string &addr,uint32_t port);
+Broadcast genAliveBroadcast(const Alive &a);
+
+Broadcast genDeadBroadcast(uint32_t incarnation,const std::string &node,const std::string &from);
+Broadcast genDeadBroadcast(const Dead &d);
+
+void addBroadCast(ComBroadcast &cbc, Broadcast bc_);
 
 
 #endif

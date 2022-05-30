@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 message Compound{
-    repeated MessageData mds=1;
+    repeated MessageData Mds=1;
 }
 
 message MessageData {
@@ -10,13 +10,11 @@ message MessageData {
         pingMsg = 0;
         indirectPingMsg=1;
         ackRespMsg=2;
-        suspectMsg=3;
-        aliveMsg=4;
-        deadMsg=5;
-        pushPullMsg=6;
-        userMsg=7;
-        nackRespMsg=8;
-        errMsg=9;
+        nackRespMsg=3;
+        pushPullMsg=4;
+        compoundBroad=5;
+        userMsg=6;
+        errMsg=7;
     }
     MessageType Head=1;
     oneof Body{
@@ -24,12 +22,10 @@ message MessageData {
         IndirectPing indirectping=3;
         AckResp ackresp=4;
         NackResp nackresp=5;
-        ErrResp errresp=6;
-        Suspect suspect=7;
-        Alive alive=8;
-        Dead dead=9;
-        PushPull pushpull=10;
-        User user=11;
+        PushPull pushpull=6;
+        ComBroadcast combroadcast=7;
+        User user=8;
+        ErrResp errresp=9;
     }
 }
 
@@ -140,4 +136,24 @@ message PushNodeState{
 // User message
 message User{
 	string Msg=1;
+}
+
+//Compound Broadcast
+message ComBroadcast{
+    repeated Broadcast Bs=1;
+}
+
+message Broadcast{
+    enum BroadcastType
+    {
+        aliveMsg=0;
+        deadMsg=1;
+        suspectMsg=2;
+    }
+    BroadcastType Type=1;
+    oneof Content{
+        Alive alive=2;
+        Dead dead=3;
+        Suspect suspect=4;
+    }
 }
