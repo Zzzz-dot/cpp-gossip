@@ -2,59 +2,72 @@
 
 using namespace std;
 
+// #define NODE_LOCK                \
+//     if (shutdown.load() == true) \
+//     {                            \
+//         return;                  \
+//     }                            \
+//     lock_guard<mutex> l(nodeMutex);
+
+#define NODE_LOCK lock_guard<mutex> l(nodeMutex);
+
 // Perform a single round of failure detection and gossip
 void memberlist::probe()
 {
 #ifdef DEBUG
-    int64_t ts = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
-    LOG(INFO) << "Start probe at " << ts << endl;
+    LOG(INFO) << "[DEBUG] Start probe()" << endl;
 #endif
     size_t numCheck = 0;
 START:
-{
-    unique_lock<mutex> l(nodeMutex);
-    // Make sure we don't wrap around infinitely
-    if (numCheck >= nodes.size())
     {
+        // if (shutdown.load() == true)
+        // {
+        //     return;
+        // }
+        unique_lock<mutex> l(nodeMutex);
+
+        // Make sure we don't wrap around infinitely
+        if (numCheck >= nodes.size())
+        {
+            l.unlock();
+            return;
+        }
+
+        // Handle the wrap around case
+        if (probeIndex >= nodes.size())
+        {
+            random_shuffle(nodes.begin(), nodes.end());
+            l.unlock();
+            probeIndex = 0;
+            numCheck++;
+            goto START;
+        }
+
+        // Determine if we should probe this node
+        bool skip = false;
+        nodeState node;
+
+        node = *nodes[probeIndex];
         l.unlock();
-        return;
-    }
+        if (node.N.Name == config->Name)
+        {
+            skip = true;
+        }
+        else if (node.DeadOrLeft())
+        {
+            skip = true;
+        }
 
-    // Handle the wrap around case
-    if (probeIndex >= nodes.size())
-    {
-        random_shuffle(nodes.begin(), nodes.end());
-        l.unlock();
-        probeIndex = 0;
-        numCheck++;
-        goto START;
+        // Potentially skip
+        probeIndex++;
+        if (skip)
+        {
+            numCheck++;
+            goto START;
+        }
+        // Probe the specific node
+        probeNode(node);
     }
-
-    // Determine if we should probe this node
-    bool skip = false;
-    nodeState node;
-
-    node = *nodes[probeIndex];
-    l.unlock();
-    if (node.N.Name == config->Name)
-    {
-        skip = true;
-    }
-    else if (node.DeadOrLeft())
-    {
-        skip = true;
-    }
-
-    // Potentially skip
-    probeIndex++;
-    if (skip)
-    {
-        numCheck++;
-        goto START;
-    }
-    // Probe the specific node
-    probeNode(node);
-}
 }
 
 // Send a ping request to the target node and wait for reply
@@ -63,15 +76,13 @@ void memberlist::probeNode(nodeState &node)
     uint32_t seqno = nextSeqNum();
     auto ping = genPing(seqno, node.N.Name, config->AdvertiseAddr, config->AdvertisePort, config->Name);
 
-    //匿名管道
-    // Empty Msg can be sent to nackfd, but not ackfd
     int ackfd[2];
-    Pipe2(ackfd, O_DIRECT);
+    Pipe(ackfd);
     int nackfd[2];
-    Pipe(nackfd);
+    Pipe2(nackfd, O_DIRECT);
 
     // Set Probe Pipes
-    setProbePipes(seqno, ackfd, nackfd, config->ProbeInterval);
+    setProbePipes(seqno, ackfd[1], nackfd[1], config->ProbeInterval);
 
     struct sockaddr_in addr = node.N.FullAddr();
 
@@ -105,6 +116,7 @@ void memberlist::probeNode(nodeState &node)
         Read(ackfd[0], (void *)&ackmsg, sizeof(ackMessage));
         if (ackmsg.Complete == true)
         {
+            clearProbePipes(ackfd, nackfd);
             return;
         }
         // Some corner case when akcmsg.Complete==false
@@ -124,7 +136,7 @@ void memberlist::probeNode(nodeState &node)
     // IndirectProbe If True Ack is not received after ProbeTimeout
     vector<nodeState> kNodes;
     {
-        lock_guard<mutex> l(nodeMutex);
+        NODE_LOCK
         kNodes = kRandomNodes(config->IndirectChecks, nodes, [this](shared_ptr<nodeState> n) -> bool
                               { return n->N.Name == this->config->Name || n->State != StateAlive; });
     }
@@ -136,63 +148,95 @@ void memberlist::probeNode(nodeState &node)
         encodeSendUDP(udpFd, &addr, indirectping);
     }
 
-    // TCP ping
+    // Also make an attempt to contact the node directly over TCP. This
+    // helps prevent confused clients who get isolated from UDP traffic
+    // but can still speak TCP (which also means they can possibly report
+    // misinformation to other nodes via anti-entropy), avoiding flapping in
+    // the cluster.
+    int fallbackfd[2];
+    Pipe(fallbackfd);
+    if (config->AllowTcpPing)
+    {
+        thread([this, fallbackfd, &node, &ping, deadline]
+               {
+                    bool didConnect=this->sendPingAndWaitForAck(node.N.FullAddr(),ping,deadline);
+                    Write(fallbackfd[1],(void*)&didConnect,sizeof(bool)); })
+            .detach();
+    }
 
     // Wait for IndirectPing
     ackMessage ackmsg;
     Read(ackfd[0], (void *)&ackmsg, sizeof(ackMessage));
     if (ackmsg.Complete == true)
     {
+        clearProbePipes(ackfd, nackfd, fallbackfd);
         return;
     }
 
+    bool didConnect;
+    Read(fallbackfd[0], (void *)&didConnect, sizeof(bool));
+    if (config->AllowTcpPing && didConnect)
+    {
+        LOG(WARNING) << "memberlist: Was able to connect to " << node.N.Name << " over TCP but UDP probes failed, network may be misconfigured" << endl;
+        clearProbePipes(ackfd, nackfd, fallbackfd);
+        return;
+    }
+
+    {
+        lock_guard<mutex> l(this->ackLock);
+        this->ackHandlers.erase(seqno);
+    }
+    clearProbePipes(ackfd, nackfd, fallbackfd);
+
     // This node may fail, gossip suspect
-    LOG(INFO) << "[INFO] memberlist: Suspect " << node.N.Name << " has failed, no acks received!" << endl;
+    LOG(INFO) << "memberlist: Suspect " << node.N.Name << " has failed, no acks received!" << endl;
     auto suspect = genSuspectBroadcast(node.Incarnation, node.N.Name, config->Name);
     suspectNode(suspect);
 }
 
+// clearAckHandler is used to close the pipe
+// when received ackmsg (whatever Complete = true or false)
+void memberlist::clearProbePipes(int ackPipe[2], int nackPipe[2], int fallbackPipe[2])
+{
+    if (fallbackPipe != nullptr)
+    {
+        Close(fallbackPipe[0]);
+        Close(fallbackPipe[1]);
+    }
+    Close(ackPipe[0]);
+    Close(ackPipe[1]);
+    Close(nackPipe[0]);
+    Close(nackPipe[1]);
+}
+
 // setprobepipes is used to attach the ackpipe to receive a message when an ack
 // with a given sequence number is received.
-void memberlist::setProbePipes(uint32_t seqNo, int ackPipe[2], int nackPipe[2], uint32_t probeInterval)
+void memberlist::setProbePipes(uint32_t seqNo, int ackPipe, int nackPipe, uint32_t probeInterval)
 {
     // onRceive Ack Resp
     auto ackFn = [ackPipe](int64_t timestamp)
     {
         ackMessage ackmsg(true, timestamp);
-        Write(ackPipe[1], (void *)&ackmsg, sizeof(ackMessage));
+        Write(ackPipe, (void *)&ackmsg, sizeof(ackMessage));
     };
 
     // onReceive Nack Resp
     auto nackFn = [nackPipe]()
     {
-        Write(nackPipe[1], nullptr, 0);
+        Write(nackPipe, "", 1);
     };
 
-    // Callback functino after prointerval, this onceTimer is invoked only when the Ack expired
-    auto f = [this, seqNo, ackPipe, nackPipe](shared_ptr<ackHandler> hand_)
+    // Callback functino after prointerval, this onceTimer is invoked only when the Ack expired;
+    auto f = [this, seqNo, ackPipe, nackPipe]
     {
-        // We need to declare a variable to hold the shared pointer previously,
-        // otherwise the shared pointer is automatically released after erase() and the corresponding function f() cannot execute sucessfully
-        hand_=this->ackHandlers[seqNo];
-        {
-            lock_guard<mutex> l(this->ackLock);
-            this->ackHandlers.erase(seqNo);
-        }
         int64_t now = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
         ackMessage ackmsg(false, now);
-        Write(ackPipe[1], (void *)&ackmsg, sizeof(ackMessage));
-
-        Close(ackPipe[0]);
-        Close(ackPipe[1]);
-        Close(nackPipe[0]);
-        Close(nackPipe[1]);
+        Write(ackPipe, (void *)&ackmsg, sizeof(ackMessage));
     };
 
     // Add ackHandlers
     {
-        shared_ptr<ackHandler> hand;
-        onceTimer t = onceTimer(probeInterval, bind(f,hand), nullptr);
+        onceTimer t = onceTimer(probeInterval, f, nullptr);
         lock_guard<mutex> l(ackLock);
         auto ackhand = make_shared<ackHandler>(ackFn, nackFn, t);
         ackHandlers[seqNo] = ackhand;
@@ -207,27 +251,10 @@ void memberlist::setProbePipes(uint32_t seqNo, int ackPipe[2], int nackPipe[2], 
 // for nacks.
 void memberlist::setAckHandler(uint32_t seqNo, function<void(int64_t timestamp)> ackFn, int64_t timeout)
 {
-
-    //fix me
-    auto f = [this, seqNo](shared_ptr<ackHandler> hand_)
-    {
-        {
-            lock_guard<mutex> l(this->ackLock);
-            hand_=this->ackHandlers[seqNo];
-            this->ackHandlers.erase(seqNo);
-        }
-    };
-
-    {
-        shared_ptr<ackHandler> hand;
-        onceTimer t = onceTimer(timeout, bind(f,hand), nullptr);
-        lock_guard<mutex> l(ackLock);
-        auto ackhand = make_shared<ackHandler>(ackFn, nullptr, t);
-        ackHandlers[seqNo] = ackhand;
-    }
-
-    // Start onceTimer
-    ackHandlers[seqNo]->t.Run();
+    onceTimer t = onceTimer(timeout, nullptr, nullptr);
+    lock_guard<mutex> l(ackLock);
+    auto ackhand = make_shared<ackHandler>(ackFn, nullptr, t);
+    ackHandlers[seqNo] = ackhand;
 }
 
 // refute gossips an alive message in response to incoming information that we
@@ -252,7 +279,7 @@ void memberlist::aliveNode(const Broadcast &b, bool bootstrap, int notifyfd)
 {
     auto a = b.alive();
 
-    lock_guard<mutex> l(nodeMutex);
+    NODE_LOCK
     shared_ptr<nodeState> state;
     bool updateNode = false;
 
@@ -284,7 +311,7 @@ void memberlist::aliveNode(const Broadcast &b, bool bootstrap, int notifyfd)
         else
         {
             size_t n = nodes.size();
-            size_t offset = (size_t)rand() / RAND_MAX * n;
+            size_t offset = rand() % n;
             nodes.push_back(nodes[offset]);
             nodes[offset] = state;
         }
@@ -298,12 +325,12 @@ void memberlist::aliveNode(const Broadcast &b, bool bootstrap, int notifyfd)
         // Check if this address is different than the existing node unless the old node is dead
         if (a.addr() != state->N.Addr || a.port() != state->N.Port)
         {
-            // Fixme: this has not been implemented
             // If DeadNodeReclaimTime is configured, check if enough time has elapsed since the node died.
-            bool canReclaim = true;
+            int64_t now = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
+            bool canReclaim = config->DeadNodeReclaimTime > 0 && now - state->StateChange >= config->DeadNodeReclaimTime;
 
             // Allow the address to be updated if a dead node is being replaced.
-            if (state->State == StateDead || state->State == StateLeft && canReclaim)
+            if (state->State == StateLeft || (state->State == StateDead && canReclaim))
             {
                 updateNode = true;
                 LOG(INFO) << "memberlist: Updating address for left or failed node " << a.node() << " form " << state->N.Addr << ":" << state->N.Port << " to " << a.addr() << ":" << a.port() << endl;
@@ -383,7 +410,7 @@ void memberlist::aliveNode(const Broadcast &b, bool bootstrap, int notifyfd)
 void memberlist::suspectNode(const Broadcast &b)
 {
     auto s = b.suspect();
-    lock_guard<mutex> l(nodeMutex);
+    NODE_LOCK
 
     // If we've never heard about this node before, ignore it
     if (nodeMap.find(s.node()) == nodeMap.end())
@@ -456,8 +483,8 @@ void memberlist::suspectNode(const Broadcast &b)
     // Compute the timeouts based on the size of the cluster.
     int64_t min = suspicionTimeout(config->SuspicionMult, n, config->ProbeInterval);
     int64_t max = config->SuspicionMaxTimeoutMult * min;
-
-    auto f = [this, s, now](atomic<uint32_t> *n)
+    
+    auto f = [this, s, now](suspicion *sup)
     {
         Broadcast d;
         bool timeout = false;
@@ -465,9 +492,6 @@ void memberlist::suspectNode(const Broadcast &b)
             lock_guard<mutex> l(this->nodeMutex);
             auto state = this->nodeMap.find(s.node());
 
-            // 第三个条件是为了保证当前的suspect计时器没有被一个新的suspect给替代
-            // 产生suspect之后又收到一个alive，然后又收到一个suspect
-            // 也保证这个函数只有一次有效执行
             timeout = state != this->nodeMap.end() && state->second->State == StateSuspect && state->second->StateChange == now;
             if (timeout)
             {
@@ -477,7 +501,8 @@ void memberlist::suspectNode(const Broadcast &b)
         if (timeout)
         {
             LOG(INFO) << "memberlist: Marking " << s.node() << " as failed, suspect timeout reached "
-                      << "(" << n->load() << " peer confirmations)" << endl;
+                      << "(" << sup->Load() << " peer confirmations)" << endl;
+            //Fixme 删除自身
             this->deadNode(d);
         }
     };
@@ -488,7 +513,7 @@ void memberlist::suspectNode(const Broadcast &b)
 void memberlist::deadNode(const Broadcast &b)
 {
     auto d = b.dead();
-    lock_guard<mutex> l(nodeMutex);
+    NODE_LOCK
 
     // If we've never heard about this node before, ignore it
     if (nodeMap.find(d.node()) == nodeMap.end())
@@ -557,12 +582,11 @@ void memberlist::deadNode(const Broadcast &b)
 void memberlist::pushPull()
 {
 #ifdef DEBUG
-    int64_t ts = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
-    LOG(INFO) << "Start pushpull at " << ts << endl;
+    LOG(INFO) << "[DEBUG] Start pushPull()" << endl;
 #endif
     vector<nodeState> v;
     {
-        lock_guard<mutex> l(nodeMutex);
+        NODE_LOCK
         v = kRandomNodes(1, nodes, [this](shared_ptr<nodeState> n) -> bool
                          { return n->N.Name == this->config->Name || n->State != StateAlive; });
     }
@@ -573,8 +597,11 @@ void memberlist::pushPull()
     }
 
     nodeState n = v[0];
-
-    pushPullNode(n.N.FullAddr(), false);
+    try{
+        pushPullNode(n.N.FullAddr(), false);
+    }catch(wrapException){
+        LOG(ERROR)<<"memberlist: cannot pushpull with the remote node"<<endl;
+    }
 }
 
 // pushPullNode does a complete state exchange with a specific node.
@@ -595,12 +622,11 @@ void memberlist::pushPullNode(const sockaddr_in &remote_addr, bool join)
 void memberlist::gossip()
 {
 #ifdef DEBUG
-    int64_t ts = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
-    LOG(INFO) << "Start gossip at " << ts << endl;
+    LOG(INFO) << "[DEBUG] Start gossip()" << endl;
 #endif
     vector<nodeState> v;
     {
-        lock_guard<mutex> l(nodeMutex);
+        NODE_LOCK
         auto exclude = [this](shared_ptr<nodeState> n) -> bool
         {
             if (n->N.Name == this->config->Name)
@@ -609,7 +635,8 @@ void memberlist::gossip()
             }
             switch (n->State)
             {
-            case StateAlive || StateSuspect:
+            case StateAlive:
+            case StateSuspect:
                 return false;
                 break;
             case StateDead:
@@ -645,6 +672,56 @@ void memberlist::gossip()
     }
 }
 
+// sendPingAndWaitForAck makes a stream connection to the given address, sends
+// a ping, and waits for an ack. All of this is done as a series of blocking
+// operations, given the deadline. The bool return parameter is true if we
+// we able to round trip a ping to the other node.
+bool memberlist::sendPingAndWaitForAck(const sockaddr_in &a, MessageData &ping, int64_t deadline)
+{
+    int fd = Socket(AF_INET, SOCK_STREAM, 0);
+    int64_t now;
+
+    now = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
+    if (deadline - now <= 0)
+    {
+        return false;
+    }
+    ConnectTimeout(fd, (sockaddr *)&a, sizeof(sockaddr_in), deadline - now);
+
+    now = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
+    if (deadline - now < 0)
+    {
+        return false;
+    }
+    struct timeval tcptimeout;
+    tcptimeout.tv_usec = deadline - now;
+
+    setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (void *)&tcptimeout, sizeof(struct timeval));
+    setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, (void *)&tcptimeout, sizeof(struct timeval));
+
+    encodeSendTCP(fd, ping);
+
+    auto resp = decodeReceiveTCP(fd);
+
+    if (resp.head() != MessageData_MessageType_ackRespMsg)
+    {
+        LOG(ERROR) << "Unexpected msgType (" << resp.head() << ") from ping " << LogCoon(fd) << endl;
+        Close(fd);
+        return false;
+    }
+
+    auto ack = resp.ackresp();
+    if (ack.seqno() != ping.ping().seqno())
+    {
+        LOG(ERROR) << "Sequence number from ack (" << ack.seqno() << ") doesn't match ping (" << ping.ping().seqno() << ")" << endl;
+        Close(fd);
+        return false;
+    }
+
+    Close(fd);
+    return true;
+}
+
 // sendAndReceiveState is used to initiate a push/pull over a stream with a
 // remote host.
 MessageData memberlist::sendAndReceiveState(const sockaddr_in &remote_addr, bool join)
@@ -663,6 +740,8 @@ MessageData memberlist::sendAndReceiveState(const sockaddr_in &remote_addr, bool
     sendLocalState(fd, join);
 
     auto pushpull = decodeReceiveTCP(fd);
+
+    Close(fd);
 
     if (pushpull.head() == MessageData::MessageType::MessageData_MessageType_errMsg)
     {
@@ -684,7 +763,7 @@ void memberlist::sendLocalState(int fd, bool join)
     // This version of the implementation does not contain TCPTimeout
     auto pushpull = genPushPull(join);
     {
-        lock_guard<mutex> l(nodeMutex);
+        NODE_LOCK
         for (size_t i = 0; i < nodes.size(); i++)
         {
             addPushNodeState(pushpull, nodes[i]->N.Name, nodes[i]->N.Addr, nodes[i]->N.Port, nodes[i]->Incarnation, PushNodeState::NodeStateType(nodes[i]->State));

@@ -29,7 +29,7 @@ void memberlist::streamListen()
             int connfd = Accept(tcpFd, (struct sockaddr *)&remote_addr, &socklen);
 
 #ifdef DEBUG
-            LOG(INFO) << "memberlist: Stream connection from " << LogAddr(remote_addr) << endl;
+            LOG(INFO) << "[DEBUG] memberlist: Stream connection from " << LogAddr(remote_addr) << endl;
 #endif
             auto t = thread(&memberlist::handleConn, this, connfd);
             t.detach();
@@ -64,8 +64,7 @@ void memberlist::packetListen()
             auto md = decodeReceiveUDP(udpFd, remote_addr, socklen);
 
 #ifdef DEBUG
-            LOG(INFO) << "memberlist: Receive UDP message from " << LogAddr(remote_addr) << endl;
-            LOG(INFO) << md.DebugString();
+            LOG(INFO) << "[DEBUG] memberlist: Receive UDP message from " << LogAddr(remote_addr) << " [" << md.DebugString() << "]" << endl;
 #endif
 
             int64_t ts = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
@@ -118,7 +117,10 @@ void memberlist::packetHandler()
                     handleSuspect(bc, from);
                     break;
                 default:
-                    LOG(ERROR) << " memberlist: Message type not supported (packet handler)" << endl;
+                    LOG(ERROR) << "memberlist: Message type not supported (packet handler)" << endl;
+#ifdef DEBUG
+                    LOG(ERROR) <<"[DEBUG] "<<bc.DebugString() << endl;
+#endif
                     break;
                 }
             }
@@ -143,8 +145,7 @@ void memberlist::handleConn(int connfd)
     auto md = decodeReceiveTCP(connfd);
 
 #ifdef DEBUG
-    LOG(INFO) << "memberlist: Receive TCP message from " << LogCoon(connfd) << endl;
-    LOG(INFO) << md.DebugString();
+    LOG(INFO) << "[DEBUG] memberlist: Receive TCP message from " << LogCoon(connfd) << " [" << md.DebugString() << "]" << endl;
 #endif
 
     switch (md.head())
@@ -160,8 +161,12 @@ void memberlist::handleConn(int connfd)
         break;
     default:
         LOG(ERROR) << "memberlist: Received invalid msgType form " << LogCoon(connfd) << endl;
+#ifdef DEBUG
+        LOG(ERROR) <<"[DEBUG] "<<md.DebugString() << endl;
+#endif
         break;
     }
+    Close(connfd);
 }
 
 // handleCommand processes the following UDP messages:
@@ -195,8 +200,12 @@ void memberlist::handleCommand(MessageData &md, struct sockaddr_in &remote_addr,
         break;
     case MessageData_MessageType_compoundBroad:
         handleComBroadcast(md.combroadcast(), remote_addr);
+        break;
     default:
         LOG(ERROR) << "memberlist: Received invalid msgType form " << LogAddr(remote_addr) << endl;
+#ifdef DEBUG
+        LOG(ERROR) <<"[DEBUG] "<<md.DebugString() << endl;
+#endif
         break;
     }
 }
@@ -264,7 +273,7 @@ void memberlist::handleIndirectPing(const IndirectPing &indirectPing, sockaddr_i
     setAckHandler(localSeqNo, respHandler, config->ProbeTimeout);
 
     struct sockaddr_in target_addr;
-    bzero(&remote_addr, sizeof(sockaddr_in));
+    bzero(&target_addr, sizeof(sockaddr_in));
     target_addr.sin_family = AF_INET;
     target_addr.sin_port = indirectPing.targetport();
     if (int e = inet_pton(AF_INET, indirectPing.targetaddr().c_str(), &target_addr.sin_addr) <= 0)
@@ -278,7 +287,7 @@ void memberlist::handleIndirectPing(const IndirectPing &indirectPing, sockaddr_i
     // Setup a timer to fire off a nack if no ack is seen in time.
     if (indirectPing.nack())
     {
-        auto f = [this, cancelFd, remote_addr, indirectPing]
+        auto f = [this, cancelFd, remote_addr, indirectPing, localSeqNo]
         {
             fd_set rset;
             FD_ZERO(&rset);
@@ -293,6 +302,7 @@ void memberlist::handleIndirectPing(const IndirectPing &indirectPing, sockaddr_i
             }
             else
             {
+                ackHandlers.erase(localSeqNo);
                 Close(cancelFd[0]);
                 Close(cancelFd[1]);
                 auto nack = genNackResp(indirectPing.seqno());
@@ -307,8 +317,6 @@ void memberlist::handleIndirectPing(const IndirectPing &indirectPing, sockaddr_i
 
 void memberlist::handleAck(const AckResp &ack, sockaddr_in &remote_addr, int64_t ts)
 {
-
-    //fix me
     shared_ptr<ackHandler> ah;
     {
         lock_guard<mutex> l(ackLock);

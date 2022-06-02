@@ -14,7 +14,7 @@ void memberlistBroadcast::Finished() const
 {
     if (notifyFd != -1)
     {
-        Close(notifyFd);
+        Write(notifyFd,"",1);
     }
 };
 

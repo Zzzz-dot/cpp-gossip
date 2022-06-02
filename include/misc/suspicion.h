@@ -20,7 +20,8 @@ struct suspicion
 {
 
     bool Confirm(const std::string& from_);
-    suspicion(const std::string& from_, uint8_t k_,int64_t min_,int64_t max_,std::function<void(std::atomic<uint32_t>* )> f_);
+    uint32_t Load();
+    suspicion(const std::string& from_, uint8_t k_,int64_t min_,int64_t max_,std::function<void(suspicion *)> f_);
 
 
     private:
@@ -28,7 +29,6 @@ struct suspicion
 	// be updated using atomic instructions to prevent contention with the
 	// timer callback.
     std::atomic<uint32_t> n;
-
 
     // k is the number of independent confirmations we'd like to see in
 	// order to drive the timer to its minimum value.
@@ -45,12 +45,13 @@ struct suspicion
     // max is the maximum timer value.
     int64_t max;
 
-	// timer is the underlying timer that implements the timeout.
-    onceTimer t;
-
     // f is the function to call when the timer expires. We hold on to this
 	// because there are cases where we call it directly.
+    // IMPORTANT: f should be declared before t
     std::function<void()> f;
+
+	// timer is the underlying timer that implements the timeout.
+    onceTimer t;
 
 	// confirmations is a map of "from" nodes that have confirmed a given
 	// node is suspect. This prevents double counting.

@@ -19,13 +19,21 @@ int main(int argc, char *argv[])
     }
     while (true)
     {
-        string msg;
-        getline(cin,msg);
         if (argc > 1)
         {
-            auto node = make_shared<Node>("","127.0.0.1",6666);
-            m->SendBestEffort(node,msg);
-            m->SendReliable(node,msg);
+            string msg;
+            getline(cin, msg);
+            if(msg=="Leave()"){
+                m->Leave(-1);
+            }
+            if(msg=="ShutDown()"){
+                m->ShutDown();
+                sleep(10);
+                return 0;
+            }
+            auto node = make_shared<Node>("", "127.0.0.1", 6666);
+            m->SendBestEffort(node, msg);
+            m->SendReliable(node, msg);
         }
     }
     return 0;

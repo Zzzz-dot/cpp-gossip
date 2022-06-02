@@ -59,8 +59,14 @@ memberlist::memberlist(shared_ptr<Config> config_)
 
 memberlist::~memberlist()
 {
-    Leave(1000000);
-    ShutDown();
+    if (shutdown.load() == false && leave.load() == false)
+    {
+        Leave(1000000);
+    }
+    if (shutdown.load() == false)
+    {
+        ShutDown();
+    }
     clearmemberlist();
     if (t1.joinable())
     {
@@ -165,8 +171,24 @@ void memberlist::clearmemberlist()
 void memberlist::Join(const string &cluster_addr)
 {
     sockaddr_in remote_addr = resolveAddr(cluster_addr);
-
-    pushPullNode(remote_addr, true);
+    for (int i = 1; i <= 10; i++)
+    {
+        try
+        {
+            pushPullNode(remote_addr, true);
+            break;
+        }
+        catch (wrapException)
+        {
+            if (i == 10)
+            {
+                ShutDown();
+                LOG(FATAL) << "memberlist: cannot join the group!" << endl;
+            }
+            LOG(ERROR) << "memberlist: cannot join the group, retrying after 5s ..." << endl;
+            sleep(5);
+        }
+    }
 }
 
 // Leave will broadcast a leave message but will not shutdown the background
@@ -183,7 +205,7 @@ void memberlist::Leave(int64_t timeout)
 {
     if (shutdown.load())
     {
-        LOG(WARNING) << "Leave after Shutdown" << endl;
+        LOG(FATAL) << "Leave after Shutdown" << endl;
     }
 
     if (leave.load() == false)
@@ -234,6 +256,7 @@ void memberlist::Leave(int64_t timeout)
             {
                 char buf[1];
                 Read(leaveFd[0], buf, 1);
+                LOG(INFO) << "leave message has been broadcasted" << endl;
             }
             else
             {
@@ -315,6 +338,8 @@ void memberlist::UpdateNode(int64_t timeout)
         {
             LOG(ERROR) << "timeout waiting for update broadcast" << endl;
         }
+        Close(notifyFd[0]);
+        Close(notifyFd[1]);
     }
 }
 
@@ -364,9 +389,18 @@ void memberlist::deschedule()
     else
         scheduled = false;
 
-    schedule_timer[0].release();
-    schedule_timer[1].release();
-    schedule_timer[2].release();
+    if (config->ProbeInterval > 0)
+    {
+        schedule_timer[0].reset();
+    }
+    if (config->PushPullInterval > 0)
+    {
+        schedule_timer[1].reset();
+    }
+    if (config->GossipInterval > 0)
+    {
+        schedule_timer[2].reset();
+    }
 }
 
 bool memberlist::anyAlive()

@@ -9,9 +9,16 @@ using namespace std;
 int main(){
     int64_t timeinerval=2000000;
     auto task1=[](){
-        cout<<"task1"<<endl;
+        for(;;){
+            sleep(1);
+            cout<<"task1"<<endl;
+        }
     };
-    auto ot=make_shared<onceTimer>(timeinerval,task1,nullptr);
+    unique_ptr<repeatTimer> ot[2];
+    ot[0]=unique_ptr<repeatTimer>(new repeatTimer(timeinerval,task1,nullptr));
+    ot[0]->Run();
+    sleep(10);
+    ot[0].reset();
 
     
     return 0;

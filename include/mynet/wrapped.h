@@ -11,6 +11,20 @@
 #include <fcntl.h>
 #include <glog/logging.h>
 
+#include <exception>
+
+#define TRACE
+
+class wrapException : public std::exception
+{
+public:
+    wrapException(char *c);
+    char *what();
+
+private:
+    char *m_p;
+};
+
 int Socket(int domain, int type, int protocol);
 
 void Bind(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len);
@@ -41,8 +55,8 @@ int Epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
 
 void Pipe(int *pipedes);
 
-void Pipe2(int *pipedes,int flags);
+void Pipe2(int *pipedes, int flags);
 
-int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval* timeout);
+int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
 
 #endif

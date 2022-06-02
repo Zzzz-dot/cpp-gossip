@@ -13,36 +13,40 @@ int64_t pushPullScale(int64_t timeinterval_, int64_t n)
 }
 
 timer::timer(int64_t timeinterval_, function<void()> task_, function<uint32_t()> estNumNodes_, bool scalable_)
-: running(false), timeinterval(timeinterval_), task(task_), scalable(scalable_), estNumNodes(estNumNodes_)
-{};
+    : running(false), timeinterval(timeinterval_), task(task_), scalable(scalable_), estNumNodes(estNumNodes_){};
 
 timer::timer(const timer &t)
-: running(false), timeinterval(t.timeinterval), task(t.task), scalable(t.scalable), estNumNodes(t.estNumNodes)
-{};
+    : running(false), timeinterval(t.timeinterval), task(t.task), scalable(t.scalable), estNumNodes(t.estNumNodes){};
 
-void timer::Restart(int64_t timeinterval_){
+void timer::Restart(int64_t timeinterval_)
+{
     Stop();
-    if(timeinterval_>0){
-        timeinterval=timeinterval_;
+    if (timeinterval_ > 0)
+    {
+        timeinterval = timeinterval_;
     }
     Run();
 }
 
 repeatTimer::repeatTimer(int64_t timeinterval_, function<void()> task_, function<uint32_t()> estNumNodes_, bool scalable_)
-:timer(timeinterval_,task_,estNumNodes_,scalable_){};
+    : timer(timeinterval_, task_, estNumNodes_, scalable_){};
 
-repeatTimer::repeatTimer(const timer &t) 
-:timer(t){};
+repeatTimer::repeatTimer(const timer &t)
+    : timer(t){};
 
 repeatTimer::~repeatTimer()
 {
     Stop();
+    if (t.joinable())
+    {
+        t.join();
+    }
 };
 
 void repeatTimer::Run()
 {
     // already running
-    if (running.load())
+    if (running.load()||task==nullptr)
     {
         return;
     }
@@ -58,43 +62,45 @@ void repeatTimer::Run()
             this->task();
         }
     };
-    //If there exists a previous running thread
-    if(t.joinable()){
+    // If there exists a previous running thread
+    if (t.joinable())
+    {
         t.join();
     }
     t = thread(runner);
 };
 
-//return false if the timer has alreadly expired or stop
+// return false if the timer has alreadly expired or stop
 bool repeatTimer::Stop()
 {
-    if(running.load()==false){
+    if (running.load() == false)
+    {
         return false;
     }
     pthread_cancel(t.native_handle());
     running.store(false);
-    if (t.joinable())
-    {
-        t.join();
-    }
     return true;
 };
 
 onceTimer::onceTimer(int64_t timeinterval_, function<void()> task_, function<uint32_t()> estNumNodes_, bool scalable_)
-:timer(timeinterval_,task_,estNumNodes_,scalable_){};
+    : timer(timeinterval_, task_, estNumNodes_, scalable_){};
 
 onceTimer::onceTimer(const timer &t)
-: timer(t){};
+    : timer(t){};
 
 onceTimer::~onceTimer()
 {
     Stop();
+    if (t.joinable())
+    {
+        t.join();
+    }
 }
 
 void onceTimer::Run()
 {
     // already running
-    if (running.load())
+    if (running.load()||task==nullptr)
     {
         return;
     }
@@ -108,23 +114,23 @@ void onceTimer::Run()
         this->task();
         this->running.store(false);
     };
-    //If there exists a previous running thread
-    if(t.joinable()){
+
+    // If there exists a previous running thread
+    if (t.joinable())
+    {
         t.join();
     }
+
     t = thread(runner);
 };
 
 bool onceTimer::Stop()
 {
-    if(running.load()==false){
+    if (running.load() == false)
+    {
         return false;
     }
     pthread_cancel(t.native_handle());
     running.store(false);
-    if (t.joinable())
-    {
-        t.join();
-    }
     return true;
 };

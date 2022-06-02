@@ -42,3 +42,24 @@ add_executable(pipeTest pipe_test.cpp)
 target_link_libraries(pipeTest pthread)
 
 add_test(pipetest pipeTest)
+
+# MUTEX
+add_executable(mutexTest mutex_test.cpp)
+
+target_link_libraries(mutexTest pthread)
+
+add_test(mutextest mutexTest)
+
+# SUSPICION
+add_executable(suspicionTest suspicion_test.cpp)
+
+target_link_libraries(suspicionTest misc)
+
+add_test(suspiciontest suspicionTest)
+
+# THREADLOCAL
+add_executable(threadlocalTest threadlocal_test.cpp)
+
+target_link_libraries(threadlocalTest pthread)
+
+add_test(threadlocaltest threadlocalTest)

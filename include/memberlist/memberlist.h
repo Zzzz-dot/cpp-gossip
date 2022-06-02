@@ -118,7 +118,10 @@ private:
     size_t probeIndex;
     void probe();
     void probeNode(nodeState &node);
-    void setProbePipes(uint32_t seqNo, int ackPipe[2], int nackPipe[2], uint32_t probeInterval);
+    void clearProbePipes(int ackPipe[2], int nackPipe[2],int fallbackPipe[2]=nullptr);
+    void setProbePipes(uint32_t seqNo, int ackPipe, int nackPipe, uint32_t probeInterval);
+
+    bool sendPingAndWaitForAck(const sockaddr_in & a, MessageData & ping, int64_t deadline);
 
     std::mutex ackLock;
     std::map<uint32_t, std::shared_ptr<ackHandler>> ackHandlers;

@@ -28,6 +28,7 @@ shared_ptr<Config> DefaultLANConfig()
     c->GossipToTheDeadTime = chrono::microseconds(30s).count();
     c->HandoffQueueDepth = 1024;
     c->UDPBufferSize = 1400;
+    c->DeadNodeReclaimTime=chrono::microseconds(10s).count();
 
     return c;
 }

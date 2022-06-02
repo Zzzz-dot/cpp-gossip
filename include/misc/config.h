@@ -141,6 +141,12 @@ struct Config
 	// This is a legacy name for backward compatibility but should really be
 	// called PacketBufferSize now that we have generalized the transport.
 	uint16_t UDPBufferSize;
+
+
+	// DeadNodeReclaimTime controls the time before a dead node's name can be
+	// reclaimed by one with a different address or port. By default, this is 0,
+	// meaning nodes cannot be reclaimed this way.
+	int64_t DeadNodeReclaimTime;
 };
 
 std::shared_ptr<Config> DefaultLANConfig();

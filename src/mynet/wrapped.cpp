@@ -1,12 +1,25 @@
 #include <mynet/wrapped.h>
 using namespace std;
 
+wrapException::wrapException(char *c)
+{
+    m_p = c;
+}
+
+char *wrapException::what()
+{
+    return m_p;
+}
+
 int Socket(int domain, int type, int protocol)
 {
     int n = socket(domain, type, protocol);
     if (n < 0)
     {
         LOG(ERROR) << "socket error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return n;
 }
@@ -17,6 +30,9 @@ void Bind(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len)
     if (e < 0)
     {
         LOG(ERROR) << "bind error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 }
 
@@ -26,6 +42,9 @@ void Listen(int fd, int n)
     if (e < 0)
     {
         LOG(ERROR) << "listen error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 }
 
@@ -35,6 +54,9 @@ void Connect(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len)
     if (e < 0)
     {
         LOG(ERROR) << "connect error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 }
 
@@ -50,7 +72,7 @@ void Connect(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len)
 void ConnectTimeout(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len, uint32_t timeout)
 {
     int flags, n, error;
-    socklen_t elen;
+    socklen_t elen=sizeof(error);
 
     // Non-blocking
     flags = fcntl(fd, F_GETFL, 0);
@@ -59,7 +81,10 @@ void ConnectTimeout(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len, uint32_t t
     n = connect(fd, addr, len);
     if (n < 0 && errno != EINPROGRESS)
     {
-        LOG(ERROR) << "connectTimeout error: " << strerror(errno) << endl;
+        LOG(ERROR) << "Nonblock connect error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 
     if (n == 0)
@@ -78,16 +103,24 @@ void ConnectTimeout(int fd, __CONST_SOCKADDR_ARG addr, socklen_t len, uint32_t t
     n = Select(fd + 1, &rset, &wset, nullptr, &connecttimeout);
     if (n == 0)
     {
-        close(fd);
+        Close(fd);
         errno = ETIMEDOUT;
-        LOG(ERROR) << "connectTimeout error: " << strerror(errno) << endl;
+        LOG(ERROR) << "Connect timeout: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 
     error = 0;
     if (FD_ISSET(fd, &rset) || FD_ISSET(fd, &wset))
     {
         if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &error, &elen) < 0)
-            LOG(ERROR) << "connectTimeout error: " << strerror(errno) << endl;
+        {
+            LOG(ERROR) << "Getsockopt error: " << strerror(errno) << endl;
+#ifdef TRACE
+            throw(wrapException(strerror(errno)));
+#endif
+        }
     }
 
 done:
@@ -96,7 +129,10 @@ done:
     {
         close(fd);
         errno = error;
-        LOG(ERROR) << "connectTimeout error: " << strerror(errno) << endl;
+        LOG(ERROR) << "Connect error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 }
 
@@ -106,6 +142,9 @@ int Accept(int fd, __SOCKADDR_ARG addr, socklen_t *__restrict addr_len)
     if (n < 0)
     {
         LOG(ERROR) << "accept error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return n;
 }
@@ -116,6 +155,9 @@ ssize_t Write(int fd, const void *buf, size_t n)
     if (num < 0)
     {
         LOG(ERROR) << "write error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return num;
 }
@@ -126,6 +168,9 @@ ssize_t Read(int fd, void *buf, size_t n)
     if (num < 0)
     {
         LOG(ERROR) << "read error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return num;
 }
@@ -136,6 +181,9 @@ void Close(int fd)
     if (e < 0)
     {
         LOG(ERROR) << "close error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 }
 
@@ -145,6 +193,9 @@ ssize_t Sendto(int fd, const void *buf, size_t n, int flags, __CONST_SOCKADDR_AR
     if (num < 0)
     {
         LOG(ERROR) << "sendto error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return num;
 }
@@ -155,6 +206,9 @@ ssize_t Recvfrom(int fd, void *__restrict buf, size_t n, int flags, __SOCKADDR_A
     if (num < 0)
     {
         LOG(ERROR) << "recvfrom error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return num;
 }
@@ -165,6 +219,9 @@ int Epoll_create(int size)
     if (n < 0)
     {
         LOG(ERROR) << "epollCreate error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return n;
 }
@@ -175,6 +232,9 @@ void Epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
     if (e < 0)
     {
         LOG(ERROR) << "epollCtl error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 }
 
@@ -184,6 +244,9 @@ int Epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
     if (num < 0)
     {
         LOG(ERROR) << "epollWait error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return num;
 }
@@ -194,6 +257,9 @@ void Pipe(int *pipedes)
     if (e < 0)
     {
         LOG(ERROR) << "pipe error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 }
 
@@ -203,6 +269,9 @@ void Pipe2(int *pipedes, int flags)
     if (e < 0)
     {
         LOG(ERROR) << "pipe2 error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
 }
 
@@ -212,20 +281,26 @@ int Select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struc
     if (n < 0)
     {
         LOG(ERROR) << "select error: " << strerror(errno) << endl;
+#ifdef TRACE
+        throw(wrapException(strerror(errno)));
+#endif
     }
     return n;
 }
 
-void Inet_pton(int af, const char *__restrict cp,void *__restrict buf){
-    int e=inet_pton(af,cp,buf);
-    if(e<0){
+void Inet_pton(int af, const char *__restrict cp, void *__restrict buf)
+{
+    int e = inet_pton(af, cp, buf);
+    if (e < 0)
+    {
         LOG(ERROR) << "inet_pton error: " << strerror(errno) << endl;
     }
 }
 
-void Inet_ntop(int af, const void *__restrict cp,char *__restrict buf, socklen_t len){
-    //const char* e=inet_ntop(af,cp,buf,len);
-    // if(e<0){
-    //     LOG(ERROR) << "inet_ntop error: " << strerror(errno) << endl;
-    // }
+void Inet_ntop(int af, const void *__restrict cp, char *__restrict buf, socklen_t len)
+{
+    // const char* e=inet_ntop(af,cp,buf,len);
+    //  if(e<0){
+    //      LOG(ERROR) << "inet_ntop error: " << strerror(errno) << endl;
+    //  }
 }

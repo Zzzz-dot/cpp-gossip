@@ -32,7 +32,7 @@ struct sockaddr_in resolveAddr(const string &s)
     string host;
     // if cluster_addr contains nodename
     // but nodename is not used in this implemention
-    if (index !=-1)
+    if (index != -1)
     {
         nodeName = s.substr(0, index);
         host = s.substr(index);
@@ -48,7 +48,7 @@ struct sockaddr_in resolveAddr(const string &s)
     sockaddr_in cluster_addr;
     bzero((void *)&cluster_addr, sizeof(sockaddr_in));
     cluster_addr.sin_family = AF_INET;
-    cluster_addr.sin_port = htons(stoul(host.substr(index+1)));
+    cluster_addr.sin_port = htons(stoul(host.substr(index + 1)));
     if (int e = inet_pton(AF_INET, host.substr(0, index).c_str(), &cluster_addr.sin_addr) <= 0)
     {
         errno = e;
@@ -69,20 +69,24 @@ vector<nodeState> kRandomNodes(uint8_t k, vector<shared_ptr<nodeState>> &nodes, 
     vector<nodeState> kNodes;
     for (int i = 0; i < 3 * n && kNodes.size() < k; i++)
     {
-        int idx = rand() / RAND_MAX * n;
+        int idx = rand()%n;
         if (exclude != nullptr && exclude(nodes[idx]))
         {
             continue;
         }
 
+        bool same = false;
         for (int j = 0; j < kNodes.size(); j++)
         {
             if (nodes[idx]->N.Name == kNodes[j].N.Name)
             {
-                continue;
+                same = true;
             }
         }
-        kNodes.push_back(*nodes[idx]);
+        if (same == false)
+        {
+            kNodes.push_back(*nodes[idx]);
+        }
     }
     return kNodes;
 }
@@ -100,7 +104,7 @@ string LogCoon(int connfd)
     bzero(&remote_addr, sizeof(sockaddr_in));
     socklen_t socklen = sizeof(sockaddr_in);
 
-    getpeername(connfd,(struct sockaddr *)&remote_addr,&socklen);
+    getpeername(connfd, (struct sockaddr *)&remote_addr, &socklen);
 
     return LogAddr(remote_addr);
 }
@@ -114,7 +118,7 @@ string LogAddr(const sockaddr_in &remote_addr)
         //
     }
     string addr(addr_);
-    addr+=":";
+    addr += ":";
     addr += to_string(port);
     return addr;
 }

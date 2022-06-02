@@ -202,12 +202,12 @@ void broadcastQueue::Prune(uint32_t maxRetain)
 #ifdef DEBUG
 void broadcastQueue::orderedView()
 {
-    LOG(INFO) << "broadcastQueue orderedView: " << endl;
+    LOG(INFO) << "[DEBUG] broadcastQueue orderedView: " << endl;
     size_t index = 0;
     for (auto i = tq.begin(); i != tq.end(); i++)
     {
         index++;
-        LOG(INFO) << "broadcastQueue Message [" << index << "]: " << endl;
+        LOG(INFO) << "[DEBUG] broadcastQueue Message [" << index << "]: " << endl;
         LOG(INFO) << i->b.Message().DebugString()<< "Transmits: " << i->transmits << ", ID: " << i->id << ", Len: " << i->msgLen << endl;
     }
 }

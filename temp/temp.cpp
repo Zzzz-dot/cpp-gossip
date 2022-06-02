@@ -1,23 +1,17 @@
 #include <iostream>
-#include <memory>
+#include <error.h>
+#include <stdio.h>
 
 using namespace std;
-
-class A{
-    public:
-        A(int x){
-            cout<<x<<endl;
-            cout<<"A"<<endl;
-        }
-
-        ~A(){
-            cout<<"~A"<<endl;
-        }
-};
-
 int main()
 {
-    auto a=make_shared<A>(1);
-
-    a=make_shared<A>(2);
+    errno=1;
+    perror("asfas");
+    cerr<<"asfsas"<<endl;
+    while (true)
+    {
+        /* code */
+    }
+    return 0;
+    
 }

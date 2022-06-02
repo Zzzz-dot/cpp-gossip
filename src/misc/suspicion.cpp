@@ -1,8 +1,8 @@
 #include <misc/suspicion.h>
 using namespace std;
 
-suspicion::suspicion(const string& from_, uint8_t k_,int64_t min_,int64_t max_,function<void(atomic<uint32_t> *)> f_)
-:n(0),k(k_),min(min_),max(max_),f(bind(f_,&n)),t(k_<1?min_:max_,f,nullptr,false)
+suspicion::suspicion(const string& from_, uint8_t k_,int64_t min_,int64_t max_,function<void(suspicion *)> f_)
+:n(0),k(k_),min(min_),max(max_),f(bind(f_,this)),t(k_<1?min_:max_,f,nullptr,false)
 {
     confirmations.insert(from_);
     start=chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now().time_since_epoch()).count();
@@ -18,6 +18,10 @@ int64_t suspicion::remainingSuspicionTime(){
 
     int64_t remain=timeout-elapsed;
     return remain;
+}
+
+uint32_t suspicion::Load(){
+    return n.load();
 }
 
 bool suspicion::Confirm(const string& from_){
